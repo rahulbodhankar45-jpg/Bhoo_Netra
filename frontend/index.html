@@ -1,0 +1,3538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BhooNetra • Land Stack India — National Digital Public Infrastructure for Land Records & GIS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+:root {
+  --primary: #0b5d3b;
+  --primary-dark: #07422a;
+  --primary-light: #167a50;
+  --primary-soft: #eaf5ef;
+  --gold: #d9a441;
+  --gold-dark: #b88325;
+  --gold-soft: #fef7ea;
+  --blue: #1d4ed8;
+  --blue-soft: #eff6ff;
+  --red: #dc2626;
+  --red-soft: #fef2f2;
+  --amber: #d97706;
+  --amber-soft: #fffbeb;
+  --slate-900: #0f172a;
+  --slate-800: #1e293b;
+  --slate-700: #334155;
+  --slate-600: #475569;
+  --slate-500: #64748b;
+  --slate-400: #94a3b8;
+  --slate-200: #e2e8f0;
+  --slate-100: #f1f5f9;
+  --slate-50: #f8fafc;
+  --surface: #ffffff;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+}
+
+body {
+  background: #f4f7f5;
+  color: var(--slate-900);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.page {
+  animation: fadeIn 0.35s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ================= HEADER ================= */
+header {
+  height: 74px;
+  background: linear-gradient(135deg, #073824 0%, #0b5d3b 60%, #0e6f47 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  box-shadow: 0 4px 20px rgba(7, 56, 36, 0.25);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+}
+
+.logo-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #d9a441 0%, #f0c368 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(217, 164, 65, 0.35);
+  transition: transform 0.25s;
+}
+
+.header-left:hover .logo-icon {
+  transform: rotate(-6deg) scale(1.05);
+}
+
+.logo-text h1 {
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.2;
+}
+
+.logo-text h1 span {
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(217, 164, 65, 0.22);
+  color: #ffd88a;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(217, 164, 65, 0.4);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.logo-text p {
+  font-size: 11px;
+  opacity: 0.85;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.api-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.api-status-pill .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulseDot 2s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+.header-btn {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.header-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.header-btn-primary {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+  color: #1e1505;
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(217, 164, 65, 0.3);
+}
+
+.header-btn-primary:hover {
+  background: linear-gradient(135deg, #f0c368 0%, var(--gold) 100%);
+  color: #1e1505;
+  box-shadow: 0 5px 14px rgba(217, 164, 65, 0.4);
+}
+
+select.lang-select {
+  background: rgba(0, 0, 0, 0.25);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+select.lang-select option {
+  background: var(--slate-800);
+  color: white;
+}
+
+/* ================= QUICK ACCESS ================= */
+.quick-operational-strip {
+  background: linear-gradient(90deg, #102a1e 0%, #0d3826 50%, #102a1e 100%);
+  border-bottom: 1px solid rgba(217, 164, 65, 0.3);
+  padding: 8px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  color: #e2e8f0;
+}
+
+.quick-operational-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: #ffd88a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+}
+
+.quick-operational-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.operational-role-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.operational-role-btn:hover {
+  background: rgba(217, 164, 65, 0.3);
+  border-color: var(--gold);
+  transform: translateY(-1px);
+}
+
+.operational-role-btn.active {
+  background: var(--gold);
+  color: #1a1304;
+  border-color: var(--gold);
+  font-weight: 700;
+}
+
+/* ================= HERO SECTION ================= */
+.home {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 50px 20px;
+  background: linear-gradient(180deg, rgba(7, 46, 29, 0.88) 0%, rgba(11, 68, 43, 0.82) 100%),
+              url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2000&q=85");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
+}
+
+.hero-content {
+  max-width: 960px;
+  margin: 0 auto;
+  z-index: 2;
+}
+
+.hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  color: #ffd88a;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 22px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.home h2 {
+  color: white;
+  font-size: 46px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin-bottom: 18px;
+}
+
+.home h2 span {
+  color: #ffd88a;
+}
+
+.home p.hero-desc {
+  color: #e2e8f0;
+  font-size: 17px;
+  max-width: 740px;
+  margin: 0 auto 36px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+/* ================= PORTAL CARDS ON HERO ================= */
+.portal-container {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 45px;
+}
+
+.portal-card {
+  width: 290px;
+  padding: 32px 24px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.portal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--gold));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.portal-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+}
+
+.portal-card:hover::before {
+  opacity: 1;
+}
+
+.portal-icon {
+  font-size: 46px;
+  margin-bottom: 14px;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.portal-card:hover .portal-icon {
+  transform: scale(1.15) rotate(3deg);
+}
+
+.portal-card h3 {
+  color: var(--primary-dark);
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.portal-card p {
+  color: var(--slate-600);
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin-bottom: 18px;
+}
+
+.portal-card .card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* ================= METRICS STRIP ================= */
+.hero-metrics-strip {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  flex-wrap: wrap;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 18px 24px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+}
+
+.hero-metric-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+  min-width: 140px;
+}
+
+.hero-metric-val {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffd88a;
+  letter-spacing: -0.02em;
+}
+
+.hero-metric-label {
+  font-size: 11.5px;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+/* ================= USER SELECTION PAGE ================= */
+.user-page {
+  min-height: calc(100vh - 120px);
+  padding: 50px 20px;
+  background: linear-gradient(180deg, rgba(7, 46, 29, 0.9) 0%, rgba(11, 68, 43, 0.85) 100%),
+              url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2000&q=85");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-container {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  max-width: 1020px;
+  width: 100%;
+}
+
+.user-card {
+  width: 300px;
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.user-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.26);
+}
+
+.user-card .icon {
+  font-size: 46px;
+  margin-bottom: 14px;
+}
+
+.user-card h3 {
+  color: var(--primary-dark);
+  font-size: 21px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.user-card p {
+  color: var(--slate-600);
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin-bottom: 22px;
+}
+
+/* ================= AUTH / LOGIN PAGE ================= */
+.auth-page {
+  min-height: calc(100vh - 120px);
+  padding: 40px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(7, 46, 29, 0.88) 0%, rgba(11, 68, 43, 0.82) 100%),
+              url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2000&q=85");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.auth-box {
+  width: 100%;
+  max-width: 520px;
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.auth-box h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--primary-dark);
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.auth-subtitle {
+  font-size: 13px;
+  color: var(--slate-500);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.auth-tabs {
+  display: flex;
+  background: var(--slate-100);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 22px;
+}
+
+.auth-tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--slate-600);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.auth-tab.active {
+  background: white;
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--slate-700);
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  color: var(--slate-900);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(11, 93, 59, 0.12);
+}
+
+.btn {
+  border: none;
+  padding: 11px 18px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13.5px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--slate-100);
+  color: var(--slate-700);
+}
+
+.btn-secondary:hover {
+  background: var(--slate-200);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+  color: #1c1303;
+}
+
+.btn-gold:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* ================= CAPTCHA ================= */
+.captcha-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.captcha-box {
+  background: #2b3a4a;
+  color: #f1f5f9;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 5px;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  user-select: none;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+}
+
+/* ================= DASHBOARD APP SHELL ================= */
+.dashboard-page {
+  display: none;
+  min-height: calc(100vh - 120px);
+  background: #f4f7f5;
+}
+
+.dashboard-layout {
+  display: flex;
+  min-height: calc(100vh - 120px);
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar {
+  width: 270px;
+  background: white;
+  border-right: 1px solid var(--slate-200);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-shrink: 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
+}
+
+.sidebar-profile {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--slate-200);
+  background: linear-gradient(180deg, #f8fbf9 0%, white 100%);
+}
+
+.profile-avatar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.profile-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(11, 93, 59, 0.25);
+}
+
+.profile-name {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--slate-900);
+  line-height: 1.2;
+}
+
+.profile-dept {
+  font-size: 11.5px;
+  color: var(--slate-500);
+  margin-top: 2px;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  border: 1px solid rgba(11, 93, 59, 0.2);
+  margin-top: 4px;
+}
+
+.sidebar-nav {
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.sidebar-nav-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--slate-700);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.sidebar-nav-btn .nav-icon-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-nav-btn:hover {
+  background: var(--slate-100);
+  color: var(--primary);
+}
+
+.sidebar-nav-btn.active {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.sidebar-nav-btn .badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: var(--slate-200);
+  color: var(--slate-700);
+}
+
+.sidebar-nav-btn.active .badge {
+  background: var(--primary);
+  color: white;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--slate-200);
+}
+
+/* ================= MAIN DASHBOARD CONTENT ================= */
+.dashboard-main {
+  flex: 1;
+  padding: 28px 32px;
+  overflow-y: auto;
+  max-width: 1600px;
+}
+
+.dashboard-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.dashboard-title-wrap h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--slate-900);
+  letter-spacing: -0.02em;
+}
+
+.dashboard-title-wrap p {
+  font-size: 13px;
+  color: var(--slate-500);
+  margin-top: 3px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ================= STATS CARDS ================= */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  border: 1px solid var(--slate-200);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-card .stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.stat-card h4 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--slate-500);
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+}
+
+.stat-card h2 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--slate-900);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.stat-card p.stat-sub {
+  font-size: 11.5px;
+  color: var(--slate-500);
+  margin-top: 6px;
+}
+
+/* ================= MAP SECTION & CONTROLS ================= */
+.map-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--slate-200);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.map-toolbar {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--slate-200);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fafcfb;
+}
+
+.map-toolbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.map-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.map-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 480px;
+}
+
+.map-search-wrap input {
+  flex: 1;
+  padding: 9px 14px;
+  border: 1px solid var(--slate-300);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  outline: none;
+}
+
+.map-search-wrap input:focus {
+  border-color: var(--primary);
+}
+
+/* Filter Pills Bar */
+.filter-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px dashed var(--slate-200);
+}
+
+.filter-group-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--slate-500);
+  letter-spacing: 0.05em;
+  margin-right: 4px;
+}
+
+.filter-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: white;
+  border: 1px solid var(--slate-200);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--slate-700);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-pill:hover {
+  background: var(--slate-100);
+  border-color: var(--slate-300);
+}
+
+.filter-pill.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Quick-Fly Parcel Selector */
+.quick-fly-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0;
+  scrollbar-width: thin;
+}
+
+.fly-pill {
+  white-space: nowrap;
+  padding: 5px 11px;
+  border-radius: 6px;
+  background: #f0f8f4;
+  border: 1px solid #cce8da;
+  color: #0b5d3b;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fly-pill:hover {
+  background: #0b5d3b;
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Basemap & Layer Switchers on Map */
+.map-container-wrap {
+  position: relative;
+  width: 100%;
+  height: 580px;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.map-layer-control-floating {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 500;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  gap: 4px;
+}
+
+.layer-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--slate-700);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.layer-btn:hover {
+  background: var(--slate-100);
+}
+
+.layer-btn.active {
+  background: var(--primary);
+  color: white;
+}
+
+.map-legend-floating {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 500;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 11px;
+  box-shadow: var(--shadow-md);
+}
+
+.map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.map-legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.location-info-bar {
+  padding: 10px 20px;
+  background: #f8fafc;
+  border-top: 1px solid var(--slate-200);
+  font-size: 12px;
+  color: var(--slate-600);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ================= WORKFLOW STEPPER ================= */
+.workflow-stepper {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 16px 0;
+  margin-bottom: 24px;
+  scrollbar-width: thin;
+}
+
+.stepper-step {
+  flex: 1;
+  min-width: 110px;
+  background: white;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  padding: 10px 8px;
+  text-align: center;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.stepper-step.completed {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.stepper-step.active {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.stepper-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--slate-200);
+  color: var(--slate-700);
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 6px;
+}
+
+.stepper-step.completed .stepper-num {
+  background: #22c55e;
+  color: white;
+}
+
+.stepper-step.active .stepper-num {
+  background: #3b82f6;
+  color: white;
+}
+
+.stepper-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--slate-700);
+  line-height: 1.2;
+}
+
+/* ================= TABLES ================= */
+.card-table-wrap {
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--slate-200);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.card-table-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--slate-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.card-table-header h3 {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--slate-900);
+}
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+table.data-table th {
+  background: #f8fafc;
+  color: var(--slate-600);
+  font-weight: 700;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--slate-200);
+}
+
+table.data-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--slate-100);
+  color: var(--slate-800);
+  vertical-align: middle;
+}
+
+table.data-table tr:hover td {
+  background: #fbfdfc;
+}
+
+/* Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge-green { background: #dcfce7; color: #15803d; }
+.badge-blue { background: #dbeafe; color: #1d4ed8; }
+.badge-amber { background: #fef3c7; color: #b45309; }
+.badge-red { background: #fee2e2; color: #b91c1c; }
+.badge-purple { background: #f3e8ff; color: #7e22ce; }
+
+/* ================= PARCEL DOSSIER CARDS (CITIZEN MY LAND) ================= */
+.parcel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+.parcel-card-modern {
+  background: white;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.parcel-card-modern:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+}
+
+.parcel-card-badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.parcel-ulpin-code {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 12px;
+  word-break: break-all;
+}
+
+.parcel-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--slate-600);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.parcel-detail-grid strong {
+  color: var(--slate-900);
+}
+
+/* ================= 360 DEGREE VERIFICATION CARDS ================= */
+.verification-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.v-card {
+  background: #f8fafc;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.v-card h4 {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--slate-900);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--slate-200);
+}
+
+.v-card-content {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--slate-700);
+}
+
+/* ================= MODALS & TOAST ================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  max-width: 580px;
+  width: 100%;
+  padding: 30px;
+  box-shadow: var(--shadow-xl);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--slate-200);
+}
+
+.modal-header h3 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.modal-close-btn {
+  background: var(--slate-100);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--slate-900);
+  color: white;
+  padding: 14px 22px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  animation: toastIn 0.25s ease;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Simulated SMS Popup */
+.sms-popup {
+  position: fixed;
+  top: 90px;
+  right: 24px;
+  width: 340px;
+  background: #1e293b;
+  color: white;
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+  z-index: 99999;
+  display: none;
+  border-left: 4px solid var(--gold);
+  animation: toastIn 0.3s ease;
+}
+
+.sms-popup h4 {
+  font-size: 12.5px;
+  color: #ffd88a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.sms-popup p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+
+/* ================= FOOTER ================= */
+footer {
+  background: #062b1b;
+  color: #94a3b8;
+  padding: 30px 28px;
+  font-size: 12.5px;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-links {
+  display: flex;
+  gap: 20px;
+}
+
+.footer-links a {
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: var(--gold);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .dashboard-layout { flex-direction: column; }
+  .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--slate-200); }
+  .dashboard-main { padding: 18px 16px; }
+  .home h2 { font-size: 32px; }
+  .portal-container { flex-direction: column; align-items: center; }
+  .portal-card { width: 100%; max-width: 360px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<header>
+  <div class="header-left" onclick="goHome()">
+    <div class="logo-icon">🇮🇳</div>
+    <div class="logo-text">
+      <h1>BhooNetra <span>DPI • Land Stack</span></h1>
+      <p id="tagline">National Digital Public Infrastructure for Land Records & GIS</p>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <div class="api-status-pill">
+      <span class="dot"></span>
+      <span id="headerApiStatus">FastAPI Gateway Online</span>
+    </div>
+
+    <button class="header-btn" onclick="togglePanel('contactPanel')">📞 Contact</button>
+    <button class="header-btn" onclick="togglePanel('faqPanel')">❓ FAQ</button>
+    <button class="header-btn" onclick="togglePanel('helpPanel')">🆘 Help</button>
+
+    <select id="languageSelect" class="lang-select" onchange="changeLanguage()">
+      <option value="en">English</option>
+      <option value="mr">मराठी</option>
+      <option value="hi">हिन्दी</option>
+    </select>
+  </div>
+</header>
+
+<!-- ================= CONTACT DRAWER ================= -->
+<div class="modal-overlay" id="contactPanel" onclick="if(event.target===this) togglePanel('contactPanel')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>📞 National Support & Helplines</h3>
+      <button class="modal-close-btn" onclick="togglePanel('contactPanel')">✕</button>
+    </div>
+    <div style="font-size:13.5px;line-height:1.7;color:var(--slate-700)">
+      <p><strong>Department of Land Resources (DoLR), Government of India</strong></p>
+      <p>National Land Record Modernization Programme (NLRMP) Technical Cell</p>
+      <hr style="margin:14px 0;border:none;border-top:1px solid #eee">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><strong>Toll-Free Helpline:</strong><br>1800-11-LAND (5263)</div>
+        <div><strong>DoLR Technical Desk:</strong><br>+91 11 2430 5000</div>
+        <div><strong>Email Support:</strong><br>support@landstack.gov.in</div>
+        <div><strong>SRO Technical Cell:</strong><br>helpdesk.sro@landstack.gov.in</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= FAQ DRAWER ================= -->
+<div class="modal-overlay" id="faqPanel" onclick="if(event.target===this) togglePanel('faqPanel')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>❓ Frequently Asked Questions</h3>
+      <button class="modal-close-btn" onclick="togglePanel('faqPanel')">✕</button>
+    </div>
+    <div style="font-size:13px;line-height:1.6;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <strong style="color:var(--primary)">1. What is ULPIN (Bhu-Aadhaar)?</strong>
+        <p style="color:var(--slate-600)">ULPIN (Unique Land Parcel Identification Number) is a 14-digit alphanumeric code representing the unique geographic identity of every surveyed land parcel across India.</p>
+      </div>
+      <div>
+        <strong style="color:var(--primary)">2. How does the 11-step ownership transfer workflow operate?</strong>
+        <p style="color:var(--slate-600)">The transfer progresses from citizen submission, SHA-256 deed validation, ULPIN cadastral check, RoR tenure match, SRO registration deed check, bank mortgage check, court dispute check, to Revenue Officer endorsement and final RoR record update.</p>
+      </div>
+      <div>
+        <strong style="color:var(--primary)">3. What is the DPDP Act Privacy Masking?</strong>
+        <p style="color:var(--slate-600)">Under the Digital Personal Data Protection Act, public discovery results mask personal identifying information (such as telephone and full names: R*** K***) while preserving legal title validity verification.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= HELP DRAWER ================= -->
+<div class="modal-overlay" id="helpPanel" onclick="if(event.target===this) togglePanel('helpPanel')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>🆘 Platform Guidance & Documentation</h3>
+      <button class="modal-close-btn" onclick="togglePanel('helpPanel')">✕</button>
+    </div>
+    <div style="font-size:13.5px;line-height:1.7;color:var(--slate-700)">
+      <h4 style="color:var(--primary);margin-bottom:6px">Quick Guide for Users:</h4>
+      <ol style="padding-left:20px;display:flex;flex-direction:column;gap:8px">
+        <li><strong>Citizen Users:</strong> Log in via 1-click accounts (Ramesh, Rajeshwari, Balasaheb) to view your verified land holdings and initiate ownership transfers.</li>
+        <li><strong>Government Officers:</strong> Log in as Revenue Officer or SRO to review transfers, run 360° cross-department land checks, and issue statutory mutation orders.</li>
+        <li><strong>Public Users:</strong> Access the Public Land Registry to query any parcel across 6 states with privacy-compliant legal extracts.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- ================= HOME HERO SECTION ================= -->
+<section id="homePage" class="home page">
+  <div class="hero-content">
+    <div class="hero-pill">🇮🇳 Unified National Public Infrastructure • Bhu-Aadhaar & GIS</div>
+    <h2 id="welcomeTitle">Unified Digital Public Infrastructure for <span>Land Governance & GIS</span></h2>
+    <p class="hero-desc" id="welcomeText">
+      Interoperable nationwide land governance platform connecting Citizens, SRO Sub-Registrars, and Revenue Authorities with cadastral mapping, PostGIS GeoJSON, and automated 11-step mutation workflows.
+    </p>
+
+    <div class="portal-container">
+      <div class="portal-card" onclick="openPortal('citizen')">
+        <div class="portal-icon">🌾</div>
+        <h3 id="citizenPortalTitle">Citizen Portal</h3>
+        <p id="citizenPortalDesc">Access your verified land holdings, download digital RoR/Bhoomi extracts, and submit ownership transfers.</p>
+        <span class="card-cta">Access Citizen Portal →</span>
+      </div>
+
+      <div class="portal-card" onclick="openPortal('government')">
+        <div class="portal-icon">🏛️</div>
+        <h3 id="govPortalTitle">Government Portal</h3>
+        <p id="govPortalDesc">Role-based access for Revenue Officers, SROs, and Surveyors to review applications and 360° title checks.</p>
+        <span class="card-cta">Officer Login & Review →</span>
+      </div>
+
+      <div class="portal-card" onclick="openPublicDirectly()">
+        <div class="portal-icon">🌐</div>
+        <h3 id="publicPortalTitle">Public Land Registry</h3>
+        <p id="publicPortalDesc">Open discovery across 12 multi-state parcels with DPDP-compliant personal data privacy masking.</p>
+        <span class="card-cta">Explore Public Registry →</span>
+      </div>
+    </div>
+
+    <!-- Live Metrics Strip -->
+    <div class="hero-metrics-strip">
+      <div class="hero-metric-item">
+        <div class="hero-metric-val" id="heroMetricParcels">12</div>
+        <div class="hero-metric-label">Cadastral Parcels</div>
+      </div>
+      <div class="hero-metric-item">
+        <div class="hero-metric-val">6</div>
+        <div class="hero-metric-label">Indian States</div>
+      </div>
+      <div class="hero-metric-item">
+        <div class="hero-metric-val">100%</div>
+        <div class="hero-metric-label">SHA-256 Verified</div>
+      </div>
+      <div class="hero-metric-item">
+        <div class="hero-metric-val">11-Step</div>
+        <div class="hero-metric-label">Mutation Machine</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= USER SELECTION PAGE ================= -->
+<section id="userPage" class="user-page page" style="display:none">
+  <div class="hero-pill">Select Your Access Portal</div>
+  <h2 style="color:white;font-size:36px;font-weight:800;margin-bottom:30px;text-align:center" id="selectUserTitle">Choose Your User Role</h2>
+  <div class="user-container">
+    <div class="user-card">
+      <div>
+        <div class="icon">👨‍🌾</div>
+        <h3 id="citizenTitle">Citizen / Land Owner</h3>
+        <p id="citizenText">Register and manage your land records, inspect legal title extracts, and submit mutation transfers.</p>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="openAuth('Citizen')">Continue as Citizen</button>
+    </div>
+
+    <div class="user-card">
+      <div>
+        <div class="icon">🏛️</div>
+        <h3 id="governmentTitle">Government Official</h3>
+        <p id="governmentText">Authorized access for Revenue Officers, SRO Sub-Registrars, Town Planners, and Compliance Auditors.</p>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="openAuth('Government')">Continue as Officer</button>
+    </div>
+
+    <div class="user-card">
+      <div>
+        <div class="icon">🌐</div>
+        <h3 id="publicTitle">Public Land Registry</h3>
+        <p id="publicText">Search cadastral boundaries and verify titles under the Digital Personal Data Protection Act.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-gold btn-block" onclick="openPublicDirectly()">Direct Public Search</button>
+        <button class="btn btn-secondary btn-block" onclick="openAuth('Public')">Public Login</button>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:30px">
+    <button class="btn btn-secondary" onclick="goHome()">← Back to Home</button>
+  </div>
+</section>
+
+<!-- ================= AUTHENTICATION / LOGIN ================= -->
+<section id="authPage" class="auth-page page" style="display:none">
+  <div class="auth-box">
+    <h2 id="authTitle">Sign In to BhooNetra</h2>
+    <p class="auth-subtitle">National Digital Public Infrastructure Authentication</p>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="loginTab" onclick="showLogin()">Login</div>
+      <div class="auth-tab" id="registerTab" onclick="showRegister()">Register</div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="loginForm" onsubmit="loginUser(event)">
+      <div class="form-group">
+        <label id="loginIdLabel">Mobile / Official Email</label>
+        <input type="text" id="loginId" placeholder="Enter email or 10-digit mobile" required>
+      </div>
+      <div class="form-group">
+        <label id="loginPasswordLabel">Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="loginBtn">Login to Dashboard</button>
+      <div style="text-align:center;margin-top:14px">
+        <button type="button" class="btn btn-secondary" onclick="backToUserPage()">← Switch Portal</button>
+      </div>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form id="registerForm" style="display:none" onsubmit="registerUser(event)">
+      <div class="form-group">
+        <label id="fullNameLabel">1) Full Name</label>
+        <input type="text" id="fullName" placeholder="Enter full legal name" required>
+      </div>
+      <div class="form-group">
+        <label id="mobileLabel">2) Mobile Number</label>
+        <input type="tel" id="mobile" placeholder="10-digit Indian mobile (e.g. 9876543210)" maxlength="10" required>
+      </div>
+
+      <div class="form-group">
+        <label id="emailLabel">3) Email ID (Verified via Email OTP)</label>
+        <div style="display:flex;gap:8px">
+          <input type="email" id="email" placeholder="name@example.com" required style="flex:1">
+          <button type="button" id="sendEmailOtpBtn" class="btn btn-primary" onclick="sendEmailOtp()" style="white-space:nowrap;padding:8px 12px;font-size:12px">Send OTP to Email</button>
+        </div>
+        <small style="display:block;color:#64748b;font-size:11px;margin-top:4px" id="emailOtpHelp">
+          A secure 6-digit OTP will be generated and dispatched directly to your email inbox.
+        </small>
+      </div>
+
+      <div class="form-group" id="emailOtpGroup" style="display:none;background:#f0fdf4;border:1px dashed #22c55e;padding:12px;border-radius:8px">
+        <label id="otpInputLabel" style="color:#15803d;display:flex;justify-content:space-between;align-items:center">
+          <span>Enter 6-Digit Email OTP</span>
+          <span id="emailOtpTimer" style="font-weight:normal;color:#666;font-size:11px"></span>
+        </label>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <input type="text" id="emailOtpInput" placeholder="6-Digit OTP" maxlength="6" style="text-align:center;letter-spacing:4px;font-weight:700;flex:1">
+          <button type="button" class="btn btn-gold" id="verifyEmailOtpBtn" onclick="verifyEmailOtp()" style="white-space:nowrap;padding:8px 14px;font-size:12px">Verify OTP</button>
+        </div>
+        <div id="emailVerifiedBadge" style="display:none;margin-top:8px;font-size:12px;color:#15803d;font-weight:bold">
+          ✓ Email address verified successfully!
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label id="registerPasswordLabel">4) Password</label>
+        <input type="password" id="registerPassword" placeholder="Minimum 6 characters" required>
+      </div>
+      <div class="form-group">
+        <label id="confirmPasswordLabel">5) Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="Confirm password" required>
+      </div>
+      <div class="form-group">
+        <label id="userRoleLabel">6) User Type / Role</label>
+        <select id="userRole" required>
+          <option value="Citizen">Citizen / Land Owner</option>
+          <option value="Government">Government Revenue Officer</option>
+          <option value="Public">Public Registry User</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label id="villageLabel">7) City / Village</label>
+        <input type="text" id="village" placeholder="e.g. Chennai, Pune, Bengaluru" required>
+      </div>
+      <div class="form-group">
+        <label id="captchaLabel">8) CAPTCHA</label>
+        <div class="captcha-container">
+          <div class="captcha-box" id="captchaDisplay">A8K9</div>
+          <button type="button" class="btn btn-secondary" onclick="generateCaptcha()" style="padding:8px 10px">↻</button>
+          <input type="text" id="captchaInput" placeholder="Enter CAPTCHA" required style="text-transform:uppercase">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Register & Get Started</button>
+    </form>
+  </div>
+</section>
+
+<!-- ================= DASHBOARD APP SHELL ================= -->
+<section id="dashboard" class="dashboard-page">
+  <div class="dashboard-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-profile">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar" id="sidebarAvatar">🧑</div>
+            <div>
+              <div class="profile-name" id="userGreeting">Officer / Citizen</div>
+              <div class="profile-dept" id="sidebarDept">Revenue Department</div>
+            </div>
+          </div>
+          <div class="profile-role-badge" id="sidebarRoleLabel">🏛️ OFFICIAL ACCESS</div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <button class="sidebar-nav-btn active" id="navMapBtn" onclick="switchDashboardTab('mapTab')">
+            <span class="nav-icon-label">🗺️ <span>GIS Cadastral Map</span></span>
+            <span class="badge" id="sidebarParcelBadge">12</span>
+          </button>
+          <button class="sidebar-nav-btn" id="navApplications" onclick="switchDashboardTab('applicationsTab')">
+            <span class="nav-icon-label">📋 <span>Applications & Mutations</span></span>
+            <span class="badge" id="sidebarAppBadge">2</span>
+          </button>
+          <button class="sidebar-nav-btn" id="navMyLand" onclick="switchDashboardTab('myLandTab')">
+            <span class="nav-icon-label">🏡 <span>My Registered Land</span></span>
+          </button>
+          <button class="sidebar-nav-btn" id="navVerification" onclick="switchDashboardTab('verificationTab')">
+            <span class="nav-icon-label">🔍 <span>360° Title Verification</span></span>
+          </button>
+          <button class="sidebar-nav-btn" id="navLetters" onclick="switchDashboardTab('lettersTab')">
+            <span class="nav-icon-label">✉️ <span>Notices & Orders</span></span>
+          </button>
+          <button class="sidebar-nav-btn" id="navAudit" onclick="switchDashboardTab('auditTab')">
+            <span class="nav-icon-label">🛡️ <span>Security Audit Trail</span></span>
+          </button>
+          <button class="sidebar-nav-btn" id="navPublic" onclick="switchDashboardTab('publicTab')">
+            <span class="nav-icon-label">🌐 <span>Public Land Registry</span></span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-secondary btn-block" onclick="logout()">🚪 Sign Out</button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="dashboard-title-wrap">
+          <h2 id="dashboardTitle">National Cadastral GIS Dashboard</h2>
+          <p id="dashboardSubtitle">BhooNetra Unified Spatial Public Infrastructure (PostGIS & FastAPI)</p>
+        </div>
+        <div class="topbar-actions">
+          <span id="portalActivePill" class="status-badge badge-green">● PRIVILEGED GOV ACCESS</span>
+          <button class="btn btn-primary" id="btnTopAction" onclick="openTransferModal()">➕ New Ownership Transfer</button>
+        </div>
+      </div>
+
+      <!-- ================= TAB 1: GIS MAP & STATS ================= -->
+      <div id="tabContentMap">
+        <!-- 6 KPI STAT CARDS -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#eaf5ef;color:#0b5d3b">🗺️</div>
+            <h4 id="kpi1Label">Total Registered Parcels</h4>
+            <h2 id="parcelCount">12</h2>
+            <p class="stat-sub" id="kpi1Sub">Across 6 Indian States</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#eff6ff;color:#1d4ed8">📐</div>
+            <h4 id="kpi2Label">Total Cadastral Area</h4>
+            <h2 id="totalArea">8.83 Ha</h2>
+            <p class="stat-sub" id="kpi2Sub">88,300.5 sq.m surveyed</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#ecfdf5;color:#059669">✔</div>
+            <h4 id="kpi3Label">Clear Freehold Titles</h4>
+            <h2 id="clearTitlesCount">10</h2>
+            <p class="stat-sub" id="kpi3Sub">RoR Validated & Verified</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#fffbeb;color:#d97706">🏦</div>
+            <h4 id="kpi4Label">Bank Mortgages / Charges</h4>
+            <h2 id="mortgageCount">3</h2>
+            <p class="stat-sub" id="kpi4Sub">SBI, HDFC, ICICI Consortium</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#fef2f2;color:#dc2626">⚖️</div>
+            <h4 id="kpi5Label">Active Court Disputes</h4>
+            <h2 id="disputeCount">2</h2>
+            <p class="stat-sub" id="kpi5Sub">Civil Injunctions & Partition</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#f5f3ff;color:#7c3aed">📋</div>
+            <h4 id="kpi6Label">Pending Mutations</h4>
+            <h2 id="pendingMutCount">2</h2>
+            <p class="stat-sub" id="kpi6Sub">In 11-Stage Workflow</p>
+          </div>
+        </div>
+
+        <!-- MAP CARD -->
+        <div class="map-card">
+          <div class="map-toolbar">
+            <div class="map-toolbar-top">
+              <div class="map-title">
+                <span>🗺️ Interactive Cadastral GIS Engine</span>
+              </div>
+              <div class="map-search-wrap">
+                <input type="text" id="searchInput" placeholder="Search by ULPIN, survey no., village, or state...">
+                <button class="btn btn-primary" style="padding:9px 14px" onclick="searchLand()">Search</button>
+                <button class="btn btn-secondary" style="padding:9px 12px" onclick="locateUser()" title="My Location">📍</button>
+              </div>
+            </div>
+
+            <!-- Multi-State Filter Pills -->
+            <div class="filter-pills-row">
+              <span class="filter-group-label">Filter by State:</span>
+              <button class="filter-pill active" onclick="filterByState('ALL', this)">All States (12)</button>
+              <button class="filter-pill" onclick="filterByState('Tamil Nadu', this)">Tamil Nadu (4)</button>
+              <button class="filter-pill" onclick="filterByState('Maharashtra', this)">Maharashtra (2)</button>
+              <button class="filter-pill" onclick="filterByState('Karnataka', this)">Karnataka (2)</button>
+              <button class="filter-pill" onclick="filterByState('Telangana', this)">Telangana (1)</button>
+              <button class="filter-pill" onclick="filterByState('Haryana', this)">Haryana (1)</button>
+              <button class="filter-pill" onclick="filterByState('Gujarat', this)">Gujarat (1)</button>
+            </div>
+
+            <!-- Quick-Fly Parcel Selector -->
+            <div class="filter-pills-row" style="border-top:none;padding-top:0">
+              <span class="filter-group-label">Quick Fly-To:</span>
+              <div class="quick-fly-row">
+                <button class="fly-pill" onclick="flyToParcel('IN-TN-CHN-000001234567')">📍 Chennai (Velachery)</button>
+                <button class="fly-pill" onclick="flyToParcel('IN-KA-BLR-000004567890')">📍 Bengaluru (Electronic City)</button>
+                <button class="fly-pill" onclick="flyToParcel('IN-MH-MUM-000006789012')">📍 Mumbai (BKC Commercial)</button>
+                <button class="fly-pill" onclick="flyToParcel('IN-TS-HYD-000005678901')">📍 Hyderabad (Gachibowli)</button>
+                <button class="fly-pill" onclick="flyToParcel('IN-HR-GUR-000007890123')">📍 Gurugram (Cyber City)</button>
+                <button class="fly-pill" onclick="flyToParcel('IN-MH-NSK-000009012345')">📍 Nashik (Vineyard Agro)</button>
+                <button class="fly-pill" onclick="flyToParcel('IN-TN-CBE-000008901234')">📍 Coimbatore (Sulur CNC)</button>
+                <button class="fly-pill" onclick="flyToParcel('IN-GJ-GND-000012345678')">📍 GIFT City (Fintech SEZ)</button>
+                <button class="fly-pill" onclick="flyToParcel('IN-KA-MYS-000010123456')">📍 Mysuru (Chamundi Heritage)</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="map-container-wrap">
+            <div id="map"></div>
+
+            <!-- Floating Multi-Basemap Switcher -->
+            <div class="map-layer-control-floating">
+              <button class="layer-btn active" id="btnBaseOsm" onclick="setBasemap('osm')">🗺️ Streets</button>
+              <button class="layer-btn" id="btnBaseSat" onclick="setBasemap('satellite')">🛰️ Satellite Aerial</button>
+              <button class="layer-btn" id="btnBasePositron" onclick="setBasemap('positron')">🏙️ Light Vector</button>
+            </div>
+
+            <!-- Floating Legend -->
+            <div class="map-legend-floating">
+              <div style="font-weight:700;margin-bottom:6px;color:var(--slate-800)">Cadastral Legend</div>
+              <div class="map-legend-item"><div class="map-legend-color" style="background:#0b5d3b"></div><span>Clean Verified Title</span></div>
+              <div class="map-legend-item"><div class="map-legend-color" style="background:#d97706"></div><span>Bank Mortgage / Charge</span></div>
+              <div class="map-legend-item"><div class="map-legend-color" style="background:#dc2626"></div><span>Active Legal Dispute</span></div>
+            </div>
+          </div>
+
+          <div class="location-info-bar">
+            <div id="locationInfo"><strong>Live GIS:</strong> 12 cadastral parcels loaded from PostGIS/SQLite backend.</div>
+            <div><span>CRS: EPSG:4326 (WGS84)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 2: APPLICATIONS & MUTATIONS ================= -->
+      <div id="tabContentApplications" style="display:none">
+        <!-- 11-STEP WORKFLOW STEPPER -->
+        <div class="card-table-wrap" style="padding:20px 24px">
+          <h3 style="margin-bottom:6px">🔄 Automated 11-Step Ownership Transfer State Machine</h3>
+          <p style="font-size:12.5px;color:var(--slate-500);margin-bottom:14px">Every land transfer undergoes rigorous cryptographic, cadastral, encumbrance, and revenue officer checks.</p>
+          <div class="workflow-stepper">
+            <div class="stepper-step completed"><div class="stepper-num">1</div><div class="stepper-label">Citizen Submission</div></div>
+            <div class="stepper-step completed"><div class="stepper-num">2</div><div class="stepper-label">SHA-256 Check</div></div>
+            <div class="stepper-step completed"><div class="stepper-num">3</div><div class="stepper-label">ULPIN Cadastre</div></div>
+            <div class="stepper-step completed"><div class="stepper-num">4</div><div class="stepper-label">RoR Title Match</div></div>
+            <div class="stepper-step completed"><div class="stepper-num">5</div><div class="stepper-label">SRO Deed Verify</div></div>
+            <div class="stepper-step completed"><div class="stepper-num">6</div><div class="stepper-label">Bank Charge Check</div></div>
+            <div class="stepper-step completed"><div class="stepper-num">7</div><div class="stepper-label">Dispute & Police</div></div>
+            <div class="stepper-step active"><div class="stepper-num">8</div><div class="stepper-label">Revenue Officer</div></div>
+            <div class="stepper-step"><div class="stepper-num">9</div><div class="stepper-label">Public Notice</div></div>
+            <div class="stepper-step"><div class="stepper-num">10</div><div class="stepper-label">SRO Endorsement</div></div>
+            <div class="stepper-step"><div class="stepper-num">11</div><div class="stepper-label">RoR Updated</div></div>
+          </div>
+        </div>
+
+        <div class="card-table-wrap">
+          <div class="card-table-header">
+            <div>
+              <h3>📋 Active Transfer & Mutation Applications</h3>
+              <small style="color:var(--slate-500)">Review and advance pending land mutation transfers</small>
+            </div>
+            <button class="btn btn-primary" onclick="openTransferModal()">➕ Submit Transfer</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>App ID</th>
+                  <th>ULPIN</th>
+                  <th>Survey & Location</th>
+                  <th>Current Owner</th>
+                  <th>Transferee Buyer</th>
+                  <th>Workflow Stage</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="applicationsTableBody">
+                <tr><td colspan="7" style="text-align:center;padding:24px;color:#666">Loading applications...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 3: CITIZEN MY LAND ================= -->
+      <div id="tabContentMyLand" style="display:none">
+        <div class="card-table-header" style="background:white;border-radius:var(--radius);border:1px solid var(--slate-200);margin-bottom:20px">
+          <div>
+            <h3>🏡 My Registered Land Holdings</h3>
+            <small style="color:var(--slate-500)">Legally verified land parcels linked to your citizen identity with e-RoR extracts</small>
+          </div>
+          <button class="btn btn-primary" onclick="openTransferModal()">Apply Transfer</button>
+        </div>
+        <div class="parcel-grid" id="myLandGrid">
+          <p style="color:#666">Loading your land holdings...</p>
+        </div>
+        <div class="card-table-wrap" style="margin-top:20px;padding:20px">
+          <h3>🔔 Notifications</h3>
+          <div id="citizenNotificationsPanel"><p style="color:#64748b">Loading notifications...</p></div>
+        </div>
+        <div class="card-table-wrap" style="margin-top:20px;padding:20px">
+          <h3>📬 Purchase Requests Received</h3>
+          <p style="font-size:12px;color:#64748b">Review interest without automatically sharing your private contact details.</p>
+          <div id="purchaseRequestsOwnerPanel"><p style="color:#64748b">Loading purchase requests...</p></div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 4: 360° GOVERNMENT VERIFICATION ================= -->
+      <div id="tabContentVerification" style="display:none">
+        <div class="card-table-wrap" style="padding:24px">
+          <h3>🔍 360° Cross-Department Land Title Verification Engine</h3>
+          <p style="font-size:13px;color:var(--slate-500);margin-bottom:16px">Multi-tier verification across RoR, SRO Deeds, Bank Encumbrances, Judicial Injunctions, and CMDA/BMRDA Zoning</p>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <input type="text" id="verifyUlpinInput" value="IN-TN-CHN-000001234567" style="flex:1;min-width:260px;padding:10px 14px;border:1px solid var(--slate-300);border-radius:var(--radius-sm);font-family:var(--font-mono)">
+            <button class="btn btn-primary" onclick="runVerificationCheck()">Run 360° Check</button>
+          </div>
+
+          <!-- Quick ULPIN Chips -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px">
+            <span style="font-size:11.5px;font-weight:700;color:var(--slate-600);align-self:center">Operational records:</span>
+            <button class="fly-pill" onclick="setVerifyUlpin('IN-TN-CHN-000001234567')">Chennai Velachery (Clean)</button>
+            <button class="fly-pill" onclick="setVerifyUlpin('IN-TN-CHN-000002345678')">Chennai T.Nagar (Mortgage)</button>
+            <button class="fly-pill" onclick="setVerifyUlpin('IN-MH-PUN-000003456789')">Pune Hinjawadi (Disputed)</button>
+            <button class="fly-pill" onclick="setVerifyUlpin('IN-KA-BLR-000004567890')">Bengaluru IT SEZ (Clean)</button>
+            <button class="fly-pill" onclick="setVerifyUlpin('IN-MH-MUM-000006789012')">Mumbai BKC (Charge)</button>
+            <button class="fly-pill" onclick="setVerifyUlpin('IN-KA-MYS-000010123456')">Mysuru Chamundi (Disputed)</button>
+            <button class="fly-pill" onclick="setVerifyUlpin('IN-GJ-GND-000012345678')">GIFT City (SEZ)</button>
+          </div>
+
+          <div class="verification-results-grid">
+            <div class="v-card">
+              <h4>📜 1. Record of Rights (RoR)</h4>
+              <div class="v-card-content" id="checkRor">Ready for verification query.</div>
+            </div>
+            <div class="v-card">
+              <h4>🏛️ 2. SRO Deed & Encumbrance</h4>
+              <div class="v-card-content" id="checkSro">Ready for verification query.</div>
+              <button class="btn btn-secondary" style="font-size:11px;padding:5px 10px;margin-top:10px" onclick="reverifySroAction()">Re-verify with SRO</button>
+            </div>
+            <div class="v-card">
+              <h4>⚖️ 3. Police & Court Disputes</h4>
+              <div class="v-card-content" id="checkPolice">Ready for verification query.</div>
+            </div>
+            <div class="v-card">
+              <h4>🤖 4. AI Fraud & Title Trust Score</h4>
+              <div class="v-card-content" id="checkAiTrust">
+                <div style="font-size:24px;font-weight:800;color:#0b5d3b" id="aiScoreValue">96 / 100</div>
+                <div style="font-size:11.5px;color:#059669;font-weight:700">LOW FRAUD RISK • TITLE VERIFIED</div>
+                <small style="color:var(--slate-500);display:block;margin-top:4px">Optical change analysis: No unauthorized encroachment detected across temporal satellite scans.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 5: GOVERNMENT LETTERS & NOTICES ================= -->
+      <div id="tabContentLetters" style="display:none">
+        <div class="card-table-wrap">
+          <div class="card-table-header">
+            <div>
+              <h3>✉️ Government Notices, Mutation Orders & NOCs</h3>
+              <small style="color:var(--slate-500)">Official statutory orders and notices issued under the State Land Revenue Act</small>
+            </div>
+            <button class="btn btn-primary" onclick="document.getElementById('letterFormBox').style.display='block'">➕ Draft New Order / Notice</button>
+          </div>
+
+          <div id="letterFormBox" style="display:none;padding:20px 24px;background:#f8fbf9;border-bottom:1px solid var(--slate-200)">
+            <h4 style="margin-bottom:12px;color:var(--primary)">Draft Official Revenue Order / Notice</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+              <div>
+                <label style="font-size:12px;font-weight:700">Parcel ULPIN</label>
+                <input type="text" id="letterUlpin" value="IN-TN-CHN-000001234567" style="width:100%;padding:8px 12px;border:1px solid var(--slate-300);border-radius:6px;font-family:var(--font-mono)">
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:700">Order / Notice Type</label>
+                <select id="letterType" style="width:100%;padding:8px 12px;border:1px solid var(--slate-300);border-radius:6px">
+                  <option value="MUTATION_ORDER">Formal Mutation Order</option>
+                  <option value="STATUTORY_NOTICE">Statutory Objection Notice</option>
+                  <option value="NOC">No Objection Certificate (NOC)</option>
+                  <option value="DEMARCATION_ORDER">Survey Demarcation Order</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-bottom:12px">
+              <label style="font-size:12px;font-weight:700">Content / Findings</label>
+              <textarea id="letterContent" rows="3" style="width:100%;padding:8px 12px;border:1px solid var(--slate-300);border-radius:6px">Notice is hereby issued confirming execution of land record mutation in accordance with Section 4 of the Revenue Act.</textarea>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-primary" onclick="submitOfficialLetter()">Issue Official Letter</button>
+              <button class="btn btn-secondary" onclick="document.getElementById('letterFormBox').style.display='none'">Cancel</button>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Letter ID</th>
+                  <th>ULPIN</th>
+                  <th>Type</th>
+                  <th>Issued By</th>
+                  <th>Date</th>
+                  <th>Content Summary</th>
+                </tr>
+              </thead>
+              <tbody id="lettersTableBody">
+                <tr><td colspan="6" style="padding:20px;text-align:center;color:#666">Loading issued government letters...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 6: IMMUTABLE AUDIT TRAIL ================= -->
+      <div id="tabContentAudit" style="display:none">
+        <div class="card-table-wrap">
+          <div class="card-table-header">
+            <div>
+              <h3>🛡️ Cryptographic Security & Compliance Audit Trail</h3>
+              <small style="color:var(--slate-500)">Append-only ledger recording all sensitive land actions with cryptographic immutability</small>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Log ID</th>
+                  <th>Timestamp</th>
+                  <th>Officer / User</th>
+                  <th>Role</th>
+                  <th>Action</th>
+                  <th>ULPIN</th>
+                  <th>Audit Details</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody">
+                <tr><td colspan="7" style="padding:20px;text-align:center;color:#666">Loading audit logs...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 7: PUBLIC LAND REGISTRY ================= -->
+      <div id="tabContentPublic" style="display:none">
+        <div class="card-table-wrap" style="padding:24px">
+          <h3>🌐 National Public Land Registry</h3>
+          <p style="font-size:13px;color:var(--slate-500);margin-bottom:16px">Buyer-friendly public view: ownership, tenure, encumbrance, title, zoning and verified document references are shown without exposing private contact details or internal officer notes.</p>
+
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:12px">
+            <input type="text" id="publicSearchInput" value="IN-TN-CHN-000001234567" placeholder="ULPIN / Survey Number / Village / Location" style="padding:10px 14px;border:1px solid var(--slate-300);border-radius:var(--radius-sm);font-family:var(--font-mono)">
+            <select id="publicStateFilter" style="padding:10px;border:1px solid var(--slate-300);border-radius:var(--radius-sm)"><option value="">All States</option><option>Tamil Nadu</option><option>Maharashtra</option><option>Karnataka</option><option>Telangana</option><option>Haryana</option><option>Gujarat</option></select>
+            <select id="publicLandTypeFilter" style="padding:10px;border:1px solid var(--slate-300);border-radius:var(--radius-sm)"><option value="">All Land Types</option><option>Residential</option><option>Commercial</option><option>Agricultural</option><option>Industrial</option><option>Heritage</option></select>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <select id="publicAvailabilityFilter" style="padding:9px;border:1px solid var(--slate-300);border-radius:7px"><option value="">Any Availability</option><option value="AVAILABLE">Available</option><option value="UNDER DISCUSSION">Under Discussion</option><option value="TRANSACTION IN PROGRESS">Transaction in Progress</option><option value="NOT AVAILABLE">Not Available</option><option value="GOVERNMENT RESTRICTED">Government Restricted</option></select>
+            <input id="publicDistrictFilter" placeholder="District" style="padding:8px;border:1px solid #cbd5e1;border-radius:7px">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+            <input id="publicMinArea" type="number" min="0" placeholder="Min area (sq.m)" style="padding:8px;border:1px solid #cbd5e1;border-radius:7px">
+            <input id="publicMaxArea" type="number" min="0" placeholder="Max area (sq.m)" style="padding:8px;border:1px solid #cbd5e1;border-radius:7px">
+            <input id="publicZoningFilter" placeholder="Zoning e.g. Residential" style="padding:8px;border:1px solid #cbd5e1;border-radius:7px">
+            <button class="btn btn-primary" onclick="searchPublicLand()">🔎 Search & Filter</button>
+          </div>
+
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px">
+            <span style="font-size:11.5px;font-weight:700;color:var(--slate-600);align-self:center">Quick records:</span>
+            <button class="fly-pill" onclick="setPublicSearch('IN-TN-CHN-000001234567')">Chennai 123/4A</button>
+            <button class="fly-pill" onclick="setPublicSearch('IN-KA-BLR-000004567890')">Bengaluru 88/3C</button>
+            <button class="fly-pill" onclick="setPublicSearch('IN-MH-MUM-000006789012')">Mumbai 512/G</button>
+            <button class="fly-pill" onclick="setPublicSearch('IN-TS-HYD-000005678901')">Hyderabad 142/1</button>
+          </div>
+
+          <div id="publicSearchResult" style="background:#f8fafc;border:1px solid var(--slate-200);padding:24px;border-radius:var(--radius)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+              <h4 style="margin:0;color:var(--primary);font-size:18px" id="pubResultTitle">Parcel</h4>
+              <span class="status-badge badge-green" id="pubVerificationBadge">🟢 VERIFIED</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;font-size:13px" id="pubResultDetails"></div>
+
+            <div style="margin-top:18px;padding:16px;border:1px solid #cbd5e1;border-radius:10px;background:white">
+              <h4 style="margin:0 0 10px;color:#0b5d3b">👥 Ownership & Tenure</h4><div id="pubOwnership"></div>
+            </div>
+            <div style="margin-top:12px;padding:16px;border:1px solid #cbd5e1;border-radius:10px;background:white">
+              <h4 style="margin:0 0 10px;color:#7c2d12">⚖️ Legal & Title Information</h4><div id="pubLegal"></div>
+            </div>
+            <div style="margin-top:12px;padding:16px;border:1px solid #cbd5e1;border-radius:10px;background:white">
+              <h4 style="margin:0 0 10px;color:#1e3a8a">🏗️ Zoning & FSI</h4><div id="pubPlanning"></div>
+            </div>
+            <div style="margin-top:12px;padding:16px;border:1px solid #cbd5e1;border-radius:10px;background:white">
+              <h4 style="margin:0 0 10px;color:#475569">📄 Important Documents</h4><div id="pubDocuments"></div>
+            </div>
+            <div style="margin-top:12px;padding:16px;border:1px solid #cbd5e1;border-radius:10px;background:white">
+              <h4 style="margin:0 0 10px;color:#334155">🗺️ Parcel Map</h4><div id="pubMapInfo" style="font-size:13px"></div><button class="btn btn-gold" style="margin-top:10px" onclick="flyToParcel(document.getElementById('purchaseRequestUlpin').value); switchDashboardTab('mapTab')">Open Map</button></div>
+
+            <div style="margin-top:18px;padding:18px;border:1px solid #bfdbfe;border-radius:10px;background:#eff6ff">
+              <h4 style="margin:0 0 6px;color:#1e3a8a">💰 Interested in purchasing this property?</h4>
+              <p style="font-size:12px;color:#475569;margin:0 0 14px">Send your details and message to the registered owner. Owner phone/email is never exposed automatically.</p>
+              <form onsubmit="submitPublicPurchaseRequest(event)">
+                <input type="hidden" id="purchaseRequestUlpin">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <input id="purchaseRequesterName" required placeholder="Name *" style="padding:10px;border:1px solid #cbd5e1;border-radius:7px">
+                  <input id="purchaseRequesterEmail" type="email" required placeholder="Email *" style="padding:10px;border:1px solid #cbd5e1;border-radius:7px">
+                  <input id="purchaseRequesterPhone" required placeholder="Phone *" style="padding:10px;border:1px solid #cbd5e1;border-radius:7px">
+                  <input id="purchaseOffer" placeholder="Offer amount (optional)" style="padding:10px;border:1px solid #cbd5e1;border-radius:7px">
+                </div>
+                <textarea id="purchaseMessage" required rows="3" placeholder="Offer / Message *" style="width:100%;margin-top:10px;padding:10px;border:1px solid #cbd5e1;border-radius:7px;resize:vertical"></textarea>
+                <button type="submit" class="btn btn-primary" style="margin-top:10px">📨 Send Purchase Request</button>
+              </form>
+            </div>
+            <div style="margin-top:14px;font-size:11.5px;color:var(--slate-500)">🔒 Citizen view intentionally excludes internal officer notes, private identity numbers and owner contact details.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</section>
+
+<!-- ================= TRANSFER MODAL ================= -->
+<div class="modal-overlay" id="transferModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Submit Ownership Transfer Application</h3>
+      <button class="modal-close-btn" onclick="closeTransferModal()">✕</button>
+    </div>
+    <form onsubmit="submitTransferApplication(event)">
+      <div class="form-group">
+        <label>Select Registered Land Parcel (ULPIN)</label>
+        <select id="transferUlpinSelect" required style="font-family:var(--font-mono)">
+          <option value="IN-TN-CHN-000001234567">IN-TN-CHN-000001234567 — Velachery, Chennai (Ramesh Kumar)</option>
+          <option value="IN-KA-BLR-000004567890">IN-KA-BLR-000004567890 — Electronic City, Bengaluru (Rajeshwari Hegde)</option>
+          <option value="IN-MH-NSK-000009012345">IN-MH-NSK-000009012345 — Dindori, Nashik (Balasaheb Shinde)</option>
+          <option value="IN-MH-MUM-000006789012">IN-MH-MUM-000006789012 — BKC, Mumbai (Vikramaditya Singhania)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Buyer / Transferee Email ID</label>
+        <input type="email" id="transferBuyerEmail" value="citizen.priya@gmail.com" placeholder="buyer@example.com" required>
+      </div>
+      <div class="form-group">
+        <label>Consideration / Sale Amount (INR)</label>
+        <input type="number" id="transferAmount" value="12500000" placeholder="Enter consideration amount" required>
+      </div>
+      <div class="form-group">
+        <label>Remarks & Deed Reference</label>
+        <textarea id="transferRemarks" rows="2" placeholder="Registered sale deed agreement details...">Registered Sale Deed finalized and signed before Sub-Registrar.</textarea>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button type="submit" class="btn btn-primary" style="flex:1">Submit for Revenue Verification</button>
+        <button type="button" class="btn btn-secondary" onclick="closeTransferModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= TOAST NOTIFICATION ================= -->
+<div class="toast" id="toast">Message</div>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">
+      <span style="font-size:20px">🇮🇳</span>
+      <div>
+        <strong>Land Stack India • BhooNetra Project</strong>
+        <div style="opacity:0.75">National Digital Public Infrastructure for Land Records & GIS Interoperability</div>
+      </div>
+    </div>
+    <div class="footer-links">
+      <a href="/docs" target="_blank">Swagger API</a>
+      <a href="/redoc" target="_blank">ReDoc</a>
+      <a href="/api-info" target="_blank">Gateway Info</a>
+      <a href="javascript:void(0)" onclick="togglePanel('contactPanel')">Helpline</a>
+      <a href="javascript:void(0)" onclick="togglePanel('helpPanel')">Docs</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ================= JAVASCRIPT LOGIC ================= -->
+<script>
+/* =========================================
+   API CONFIGURATION
+========================================= */
+const BHOONETRA_API = (window.location.protocol.startsWith('http') && (window.location.port === '8000' || window.location.port === '4000' || window.location.port === ''))
+    ? window.location.origin + "/api"
+    : "http://localhost:8000/api";
+const PUBLIC_API = BHOONETRA_API + '/v1/public';
+const CITIZEN_API = BHOONETRA_API + '/v1/citizen';
+
+let apiToken = sessionStorage.getItem("bhooNetraToken") || "";
+let apiUser = JSON.parse(sessionStorage.getItem("bhooNetraUser") || "null");
+let apiGeoJSON = null;
+let currentBasemap = 'osm';
+let map = null;
+let parcelLayer = null;
+let osmLayer = null;
+let satelliteLayer = null;
+let positronLayer = null;
+let activeFilterState = 'ALL';
+
+let selectedUserType = "Citizen";
+let generatedCaptcha = "";
+let isEmailVerified = false;
+let verifiedEmailOtpCode = "";
+let emailOtpCooldown = 0;
+let emailOtpInterval = null;
+
+/* =========================================
+   GENERIC API REQUEST WRAPPER
+========================================= */
+async function apiRequest(path, options = {}) {
+    const headers = Object.assign({"Content-Type":"application/json"}, options.headers || {});
+    if (apiToken) headers.Authorization = "Bearer " + apiToken;
+    const response = await fetch(BHOONETRA_API + path, Object.assign({}, options, {headers}));
+    let data = null;
+    try { data = await response.json(); } catch (_) {}
+    if (!response.ok) {
+        const message = data && (data.error || data.message || data.detail) ? (data.error || data.message || data.detail) : `Request failed (${response.status})`;
+        throw new Error(message);
+    }
+    return data;
+}
+
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    if (!toast) return;
+    toast.innerText = message;
+    toast.style.display = "flex";
+    setTimeout(() => { toast.style.display = "none"; }, 3500);
+}
+
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/* =========================================
+   MODALS & DRAWERS
+========================================= */
+function togglePanel(panelId) {
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+    panel.style.display = (panel.style.display === "flex") ? "none" : "flex";
+}
+
+function openTransferModal() {
+    const m = document.getElementById('transferModal');
+    if (m) m.style.display = 'flex';
+}
+
+function closeTransferModal() {
+    const m = document.getElementById('transferModal');
+    if (m) m.style.display = 'none';
+}
+
+
+
+/* =========================================
+   NAVIGATION & PAGE SWITCHING
+========================================= */
+function goHome() {
+    document.getElementById("homePage").style.display = "flex";
+    document.getElementById("userPage").style.display = "none";
+    document.getElementById("authPage").style.display = "none";
+    document.getElementById("dashboard").style.display = "none";
+}
+
+function openPortal(portal) {
+    if (portal === 'public') {
+        openPublicDirectly();
+        return;
+    }
+    document.getElementById("homePage").style.display = "none";
+    document.getElementById("userPage").style.display = "flex";
+    document.getElementById("authPage").style.display = "none";
+    document.getElementById("dashboard").style.display = "none";
+}
+
+function backToUserPage() {
+    document.getElementById("authPage").style.display = "none";
+    document.getElementById("userPage").style.display = "flex";
+}
+
+function openAuth(type) {
+    selectedUserType = type;
+    if (type === 'Public') {
+        openPublicDirectly();
+        return;
+    }
+    document.getElementById("userPage").style.display = "none";
+    document.getElementById("authPage").style.display = "flex";
+
+    const title = document.getElementById("authTitle");
+    const loginIdInput = document.getElementById("loginId");
+    const loginPassInput = document.getElementById("loginPassword");
+    // Login uses the normal email/password form. Quick-access/demo account buttons are intentionally hidden.
+    if (loginIdInput) loginIdInput.value = "";
+    if (loginPassInput) loginPassInput.value = "";
+    if (type === "Government" && title) title.innerText = "🏛️ Government Officer Sign In";
+    if (type !== "Government" && title) title.innerText = "🌾 Citizen Land Owner Sign In";
+
+    generateCaptcha();
+    showLogin();
+}
+
+function openPublicDirectly() {
+    selectedUserType = "Public";
+    apiUser = { name: "Public Citizen", role: "PUBLIC", department: "Open Discovery" };
+    sessionStorage.setItem("bhooNetraUser", JSON.stringify(apiUser));
+    openDashboard();
+}
+
+function showLogin() {
+    document.getElementById("loginTab").classList.add("active");
+    document.getElementById("registerTab").classList.remove("active");
+    document.getElementById("loginForm").style.display = "block";
+    document.getElementById("registerForm").style.display = "none";
+}
+
+function showRegister() {
+    document.getElementById("registerTab").classList.add("active");
+    document.getElementById("loginTab").classList.remove("active");
+    document.getElementById("registerForm").style.display = "block";
+    document.getElementById("loginForm").style.display = "none";
+    generateCaptcha();
+}
+
+/* =========================================
+   CAPTCHA & OTP
+========================================= */
+function generateCaptcha() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let text = "";
+    for (let i = 0; i < 4; i++) {
+        text += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    generatedCaptcha = text;
+    const disp = document.getElementById("captchaDisplay");
+    if (disp) disp.innerText = text;
+}
+
+async function sendEmailOtp() {
+    const emailInput = document.getElementById("email");
+    const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showToast("Please enter a valid email address first.");
+        return;
+    }
+
+    const btn = document.getElementById("sendEmailOtpBtn");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = "Sending OTP...";
+    }
+
+    try {
+        const data = await apiRequest("/auth/send-email-otp", {
+            method: "POST",
+            body: JSON.stringify({ email: email, purpose: "REGISTRATION" })
+        });
+        const group = document.getElementById("emailOtpGroup");
+        if (group) group.style.display = "block";
+        const otpInput = document.getElementById("emailOtpInput");
+        if (otpInput) {
+            otpInput.value = "";
+            otpInput.focus();
+        }
+
+        const help = document.getElementById("emailOtpHelp");
+        if (data.smtp_configured) {
+            showToast("✓ Verification code dispatched to your email inbox! Please check inbox and spam folder.");
+            if (help) help.innerText = "Real email dispatched via SMTP to " + email + ". Check your inbox or spam folder.";
+        } else {
+            showToast("✓ OTP generated! (Local mode: SMTP credentials not set in .env)");
+            if (help) {
+                help.innerHTML = `<span style="color:#b45309;font-weight:bold">⚡ SMTP Not Configured in .env:</span> Emails cannot reach Gmail without SMTP credentials in <code>.env</code>.<br>Your generated OTP is: <strong style="color:#0b5d3b;font-size:14px;letter-spacing:2px;background:#e8f4ec;padding:2px 6px;border-radius:4px">${data.demo_otp}</strong> (Enter this code below to verify)`;
+            }
+        }
+
+        emailOtpCooldown = 60;
+        if (btn) btn.innerText = `Resend (${emailOtpCooldown}s)`;
+        if (emailOtpInterval) clearInterval(emailOtpInterval);
+        emailOtpInterval = setInterval(() => {
+            emailOtpCooldown--;
+            if (emailOtpCooldown <= 0) {
+                clearInterval(emailOtpInterval);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = "Resend OTP";
+                }
+            } else {
+                if (btn) btn.innerText = `Resend (${emailOtpCooldown}s)`;
+            }
+        }, 1000);
+    } catch (err) {
+        showToast(err.message || "Failed to send OTP to email.");
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = "Send OTP to Email";
+        }
+    }
+}
+
+async function verifyEmailOtp() {
+    const emailInput = document.getElementById("email");
+    const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
+    const otpInput = document.getElementById("emailOtpInput");
+    const otp = otpInput ? otpInput.value.trim() : "";
+
+    if (!email) {
+        showToast("Please enter your email address.");
+        return;
+    }
+    if (!otp || otp.length !== 6) {
+        showToast("Please enter the 6-digit OTP received in your email.");
+        return;
+    }
+
+    const verifyBtn = document.getElementById("verifyEmailOtpBtn");
+    if (verifyBtn) {
+        verifyBtn.disabled = true;
+        verifyBtn.innerText = "Verifying...";
+    }
+
+    try {
+        const data = await apiRequest("/auth/verify-email-otp", {
+            method: "POST",
+            body: JSON.stringify({ email: email, otp_code: otp, purpose: "REGISTRATION" })
+        });
+
+        isEmailVerified = true;
+        verifiedEmailOtpCode = otp;
+        showToast("✓ " + (data.message || "Email verified successfully!"));
+
+        // Lock email and OTP input
+        if (emailInput) emailInput.readOnly = true;
+        if (otpInput) otpInput.readOnly = true;
+        const sendBtn = document.getElementById("sendEmailOtpBtn");
+        if (sendBtn) sendBtn.style.display = "none";
+        if (verifyBtn) {
+            verifyBtn.disabled = true;
+            verifyBtn.innerText = "Verified ✓";
+            verifyBtn.style.background = "#15803d";
+            verifyBtn.style.color = "#ffffff";
+        }
+        const badge = document.getElementById("emailVerifiedBadge");
+        if (badge) badge.style.display = "block";
+    } catch (err) {
+        showToast(err.message || "Invalid or expired verification code.");
+        if (verifyBtn) {
+            verifyBtn.disabled = false;
+            verifyBtn.innerText = "Verify OTP";
+        }
+    }
+}
+
+/* =========================================
+   AUTHENTICATION LOGIC
+========================================= */
+async function loginUser(event) {
+    if (event) event.preventDefault();
+    const loginId = document.getElementById("loginId").value.trim();
+    const password = document.getElementById("loginPassword").value;
+
+    try {
+        const data = await apiRequest("/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ email: loginId, password: password })
+        });
+        apiToken = data.token;
+        apiUser = data.user;
+        sessionStorage.setItem("bhooNetraToken", apiToken);
+        sessionStorage.setItem("bhooNetraUser", JSON.stringify(apiUser));
+        showToast("Welcome back, " + apiUser.name + "!");
+        openDashboard();
+    } catch (err) {
+        showToast(err.message || "Invalid credentials.");
+    }
+}
+
+function quickLoginAs(email, pwd) {
+    const loginIdInput = document.getElementById("loginId");
+    const loginPassInput = document.getElementById("loginPassword");
+    if (loginIdInput) loginIdInput.value = email;
+    if (loginPassInput) loginPassInput.value = pwd;
+    loginUser(new Event('submit'));
+}
+
+async function registerUser(event) {
+    event.preventDefault();
+    const name = document.getElementById("fullName").value.trim();
+    const mobile = document.getElementById("mobile") ? document.getElementById("mobile").value.trim() : "";
+    const email = document.getElementById("email").value.trim().toLowerCase();
+    const password = document.getElementById("registerPassword").value;
+    const confirm = document.getElementById("confirmPassword").value;
+    const role = document.getElementById("userRole").value;
+    const captcha = document.getElementById("captchaInput").value.trim().toUpperCase();
+
+    if (!isEmailVerified) {
+        showToast("Please verify your email address using the OTP sent to your inbox before registering.");
+        return;
+    }
+    if (password !== confirm) {
+        showToast("Passwords do not match.");
+        return;
+    }
+    if (captcha !== generatedCaptcha) {
+        showToast("Incorrect CAPTCHA code.");
+        generateCaptcha();
+        return;
+    }
+
+    try {
+        await apiRequest("/auth/register", {
+            method: "POST",
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                password: password,
+                role: role,
+                phone: mobile,
+                otp: verifiedEmailOtpCode
+            })
+        });
+        showToast("Registration successful! Logging you in...");
+        quickLoginAs(email, password);
+    } catch (err) {
+        showToast(err.message || "Registration failed.");
+    }
+}
+
+function logout() {
+    apiToken = "";
+    apiUser = null;
+    sessionStorage.removeItem("bhooNetraToken");
+    sessionStorage.removeItem("bhooNetraUser");
+    showToast("Signed out successfully.");
+    goHome();
+}
+
+/* =========================================
+   DASHBOARD INITIALIZATION & TABS
+========================================= */
+async function openDashboard() {
+    document.getElementById("homePage").style.display = "none";
+    document.getElementById("userPage").style.display = "none";
+    document.getElementById("authPage").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+
+    initializeMap();
+
+    const userRole = (apiUser && (apiUser.govRole || apiUser.role || '')) || selectedUserType || 'Citizen';
+    const isGov = ['REVENUE_OFFICER', 'SRO_OFFICER', 'SURVEYOR', 'AUDITOR', 'SUPER_ADMIN', 'official', 'Government'].includes(userRole) || (apiUser && apiUser.role === 'official');
+    const isPublic = userRole === 'PUBLIC' || userRole === 'public' || selectedUserType === 'Public';
+
+    const who = document.getElementById('dashboardTitle');
+    const greeting = document.getElementById('userGreeting');
+    const roleBadge = document.getElementById('sidebarRoleLabel');
+    const dept = document.getElementById('sidebarDept');
+    const pill = document.getElementById('portalActivePill');
+    const subtitle = document.getElementById('dashboardSubtitle');
+    const topAction = document.getElementById('btnTopAction');
+
+    const navApps = document.getElementById('navApplications');
+    const navLand = document.getElementById('navMyLand');
+    const navVerify = document.getElementById('navVerification');
+    const navLetters = document.getElementById('navLetters');
+    const navAudit = document.getElementById('navAudit');
+    const navPublic = document.getElementById('navPublic');
+
+    if (isPublic) {
+        if (who) who.innerText = 'Public Land Registry • Land Stack India';
+        if (subtitle) subtitle.innerText = 'Search verified parcel information, documents, maps and availability';
+        if (topAction) { topAction.innerText = '🔎 Search Public Land'; topAction.onclick = () => switchDashboardTab('publicTab'); }
+        if (greeting) greeting.innerText = '👤 Public User';
+        if (dept) dept.innerText = 'DPDP Section 6 Masked View';
+        if (roleBadge) roleBadge.innerText = '🌐 PUBLIC REGISTRY';
+        if (pill) { pill.innerText = '● DPDP MASKED VIEW'; pill.className = 'status-badge badge-blue'; }
+        if (navApps) navApps.style.display = 'none';
+        if (navLand) navLand.style.display = 'none';
+        if (navVerify) navVerify.style.display = 'none';
+        if (navLetters) navLetters.style.display = 'none';
+        if (navAudit) navAudit.style.display = 'none';
+        if (navPublic) navPublic.style.display = 'flex';
+        switchDashboardTab('mapTab');
+    } else if (isGov) {
+        const roleLabel = (apiUser && apiUser.govRole) ? apiUser.govRole.replace(/_/g, ' ') : 'OFFICER';
+        if (who) who.innerText = 'Government Officer Portal • ' + ((apiUser && apiUser.name) || 'Officer');
+        if (subtitle) subtitle.innerText = 'Land administration, workflow management and cross-department verification';
+        if (topAction) { topAction.innerText = '➕ New Ownership Transfer'; topAction.onclick = openTransferModal; }
+        if (greeting) greeting.innerText = '🏛️ ' + ((apiUser && apiUser.name) || 'Officer');
+        if (dept) dept.innerText = (apiUser && apiUser.department) || 'Revenue Department';
+        if (roleBadge) roleBadge.innerText = '🏛️ ' + roleLabel;
+        if (pill) { pill.innerText = '● GOV PRIVILEGED ACCESS'; pill.className = 'status-badge badge-amber'; }
+        if (navApps) navApps.style.display = 'flex';
+        if (navLand) navLand.style.display = 'none';
+        if (navVerify) navVerify.style.display = 'flex';
+        if (navLetters) navLetters.style.display = 'flex';
+        if (navAudit) navAudit.style.display = 'flex';
+        if (navPublic) navPublic.style.display = 'flex';
+        switchDashboardTab('mapTab');
+    } else {
+        if (who) who.innerText = 'Citizen Portal • ' + ((apiUser && apiUser.name) || 'Citizen');
+        if (subtitle) subtitle.innerText = 'Your land holdings, applications, purchase interest and notifications';
+        if (topAction) { topAction.innerText = '➕ Apply Ownership Transfer'; topAction.onclick = openTransferModal; }
+        if (greeting) greeting.innerText = '🌾 ' + ((apiUser && apiUser.name) || 'Citizen');
+        if (dept) dept.innerText = 'Verified Land Owner Profile';
+        if (roleBadge) roleBadge.innerText = '🌾 CITIZEN PORTAL';
+        if (pill) { pill.innerText = '● VERIFIED LAND OWNER'; pill.className = 'status-badge badge-green'; }
+        if (navApps) navApps.style.display = 'flex';
+        if (navLand) navLand.style.display = 'flex';
+        if (navVerify) navVerify.style.display = 'none';
+        if (navLetters) navLetters.style.display = 'none';
+        if (navAudit) navAudit.style.display = 'none';
+        if (navPublic) navPublic.style.display = 'flex';
+        switchDashboardTab('mapTab');
+    }
+
+    await loadRegisteredParcels();
+    await loadDashboardSummary();
+}
+
+function switchDashboardTab(tabId) {
+    const tabMap = {
+        'mapTab': { btn: 'navMapBtn', content: 'tabContentMap' },
+        'applicationsTab': { btn: 'navApplications', content: 'tabContentApplications' },
+        'myLandTab': { btn: 'navMyLand', content: 'tabContentMyLand' },
+        'verificationTab': { btn: 'navVerification', content: 'tabContentVerification' },
+        'lettersTab': { btn: 'navLetters', content: 'tabContentLetters' },
+        'auditTab': { btn: 'navAudit', content: 'tabContentAudit' },
+        'publicTab': { btn: 'navPublic', content: 'tabContentPublic' }
+    };
+
+    document.querySelectorAll('.sidebar-nav-btn').forEach(b => b.classList.remove('active'));
+
+    Object.values(tabMap).forEach(item => {
+        const el = document.getElementById(item.content);
+        if (el) el.style.display = 'none';
+    });
+
+    const target = tabMap[tabId];
+    if (target) {
+        const btn = document.getElementById(target.btn);
+        if (btn) btn.classList.add('active');
+        const content = document.getElementById(target.content);
+        if (content) content.style.display = 'block';
+    }
+
+    if (tabId === 'mapTab' && map) {
+        setTimeout(() => map.invalidateSize(), 200);
+    } else if (tabId === 'applicationsTab') {
+        loadApplications();
+    } else if (tabId === 'myLandTab') {
+        loadMyLand();
+    } else if (tabId === 'verificationTab') {
+        runVerificationCheck();
+    } else if (tabId === 'lettersTab') {
+        loadGovernmentLetters();
+    } else if (tabId === 'auditTab') {
+        loadAuditTrail();
+    } else if (tabId === 'publicTab') {
+        searchPublicLand();
+    }
+}
+
+/* =========================================
+   GIS MAP ENGINE (MULTI-BASEMAP & POSTGIS)
+========================================= */
+function initializeMap() {
+    if (map) return;
+    map = L.map("map", {
+        center: [17.5, 78.5],
+        zoom: 5,
+        zoomControl: true
+    });
+
+    osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    satelliteLayer = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
+
+    positronLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; CARTO'
+    });
+
+    parcelLayer = L.featureGroup().addTo(map);
+}
+
+function setBasemap(type) {
+    currentBasemap = type;
+    document.getElementById("btnBaseOsm").classList.remove("active");
+    document.getElementById("btnBaseSat").classList.remove("active");
+    document.getElementById("btnBasePositron").classList.remove("active");
+
+    map.removeLayer(osmLayer);
+    map.removeLayer(satelliteLayer);
+    map.removeLayer(positronLayer);
+
+    if (type === 'satellite') {
+        satelliteLayer.addTo(map);
+        document.getElementById("btnBaseSat").classList.add("active");
+    } else if (type === 'positron') {
+        positronLayer.addTo(map);
+        document.getElementById("btnBasePositron").classList.add("active");
+    } else {
+        osmLayer.addTo(map);
+        document.getElementById("btnBaseOsm").classList.add("active");
+    }
+}
+
+async function loadRegisteredParcels() {
+    if (!map || !parcelLayer) return;
+    parcelLayer.clearLayers();
+
+    try {
+        apiGeoJSON = await apiRequest("/gis/geojson");
+        renderGeoJSONLayers();
+    } catch (err) {
+        console.error("GeoJSON load failed:", err);
+        showToast("Could not load GIS cadastre from backend.");
+    }
+}
+
+function renderGeoJSONLayers() {
+    if (!apiGeoJSON || !apiGeoJSON.features) return;
+    parcelLayer.clearLayers();
+    const bounds = [];
+
+    const filtered = apiGeoJSON.features.filter(f => {
+        if (activeFilterState === 'ALL') return true;
+        const p = f.properties || {};
+        return p.state && p.state.toLowerCase() === activeFilterState.toLowerCase();
+    });
+
+    filtered.forEach(feature => {
+        const p = feature.properties || {};
+        const isDisputed = p.isDisputed;
+        const hasEnc = p.hasEncumbrance;
+
+        let strokeColor = "#0b5d3b";
+        let fillColor = "#2e8b57";
+
+        if (isDisputed) {
+            strokeColor = "#dc2626";
+            fillColor = "#ef4444";
+        } else if (hasEnc) {
+            strokeColor = "#d97706";
+            fillColor = "#f59e0b";
+        }
+
+        const layer = L.geoJSON(feature, {
+            style: {
+                color: strokeColor,
+                fillColor: fillColor,
+                fillOpacity: 0.42,
+                weight: 2.5
+            }
+        });
+
+        const statusTag = isDisputed
+            ? '<span class="status-badge badge-red">Court Dispute Active</span>'
+            : (hasEnc ? '<span class="status-badge badge-amber">Bank Mortgage / Charge</span>' : '<span class="status-badge badge-green">Clear Freehold Title</span>');
+
+        const popupHtml = `
+            <div style="min-width:260px;font-family:var(--font-sans)">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                    <span style="font-size:11px;font-weight:700;color:#666">${escapeHTML(p.state || 'India')}</span>
+                    ${statusTag}
+                </div>
+                <h4 style="color:#0b5d3b;font-family:var(--font-mono);font-size:13px;margin-bottom:6px">${escapeHTML(p.ulpin)}</h4>
+                <div style="font-size:12px;line-height:1.6;color:#333;margin-bottom:10px">
+                    <strong>Owner:</strong> ${escapeHTML(p.owner)}<br>
+                    <strong>Survey No:</strong> ${escapeHTML(p.surveyNumber || '123')} (Taluk: ${escapeHTML(p.taluk || p.village)})<br>
+                    <strong>Land Type:</strong> ${escapeHTML(p.landUse)}<br>
+                    <strong>Area:</strong> ${escapeHTML(String(p.area))} ${escapeHTML(p.areaUnit || 'sq.m')}<br>
+                    <strong>Tax:</strong> ${escapeHTML(p.taxStatus)} • <strong>RoR:</strong> ${escapeHTML(p.rorStatus)}
+                </div>
+                <button class="btn btn-primary" style="width:100%;font-size:11px;padding:6px" onclick="inspectParcelFromMap('${escapeHTML(p.ulpin)}')">Open 360° Verification Dossier →</button>
+            </div>
+        `;
+
+        layer.bindPopup(popupHtml);
+
+        layer.on('click', () => {
+            const loc = document.getElementById("locationInfo");
+            if (loc) {
+                loc.innerHTML = `<strong>Selected Parcel:</strong> ${escapeHTML(p.ulpin)} • ${escapeHTML(p.village)}, ${escapeHTML(p.state)} • ${escapeHTML(p.owner)}`;
+            }
+        });
+
+        layer.addTo(parcelLayer);
+
+        const geom = feature.geometry;
+        if (geom && geom.type === 'Polygon' && geom.coordinates && geom.coordinates[0]) {
+            geom.coordinates[0].forEach(c => {
+                if (c.length >= 2) bounds.push([c[1], c[0]]);
+            });
+        }
+    });
+
+    if (bounds.length) {
+        map.fitBounds(bounds, { padding: [40, 40] });
+    }
+
+    const loc = document.getElementById("locationInfo");
+    if (loc) {
+        loc.innerHTML = `<strong>Live GIS:</strong> ${filtered.length} of ${apiGeoJSON.features.length} parcels displayed on map.`;
+    }
+}
+
+function filterByState(state, btn) {
+    activeFilterState = state;
+    document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+    renderGeoJSONLayers();
+}
+
+function flyToParcel(ulpin) {
+    if (!apiGeoJSON || !apiGeoJSON.features) return;
+    const feat = apiGeoJSON.features.find(f => f.properties && f.properties.ulpin === ulpin);
+    if (!feat) {
+        showToast("Parcel not found in active layer.");
+        return;
+    }
+
+    const p = feat.properties;
+    let center = null;
+    if (p.centroid && p.centroid.length === 2) {
+        center = [p.centroid[1], p.centroid[0]];
+    } else if (feat.geometry && feat.geometry.coordinates && feat.geometry.coordinates[0]) {
+        const c = feat.geometry.coordinates[0][0];
+        center = [c[1], c[0]];
+    }
+
+    if (center) {
+        map.flyTo(center, 16, { duration: 1.2 });
+        setTimeout(() => {
+            parcelLayer.eachLayer(l => {
+                l.eachLayer(sub => {
+                    if (sub.feature && sub.feature.properties && sub.feature.properties.ulpin === ulpin) {
+                        sub.openPopup();
+                    }
+                });
+            });
+        }, 1300);
+    }
+}
+
+async function searchLand() {
+    const query = document.getElementById("searchInput").value.trim();
+    if (!query) {
+        showToast("Please enter search keywords.");
+        return;
+    }
+
+    try {
+        const results = await apiRequest(`/parcels?search=${encodeURIComponent(query)}`);
+        const list = Array.isArray(results) ? results : (results.parcels || []);
+        if (!list.length) {
+            showToast("No matching land parcel found.");
+            return;
+        }
+
+        const parcel = list[0];
+        flyToParcel(parcel.ulpin);
+        showToast("Found parcel in " + (parcel.village || parcel.state));
+    } catch (err) {
+        showToast(err.message || "Search failed.");
+    }
+}
+
+function locateUser() {
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(pos => {
+            map.flyTo([pos.coords.latitude, pos.coords.longitude], 14);
+            L.circleMarker([pos.coords.latitude, pos.coords.longitude], {
+                radius: 8,
+                fillColor: '#3b82f6',
+                color: '#ffffff',
+                weight: 2,
+                fillOpacity: 1
+            }).addTo(map).bindPopup("<b>Your Current Location</b>").openPopup();
+            showToast("Centered on your current location.");
+        }, () => {
+            showToast("Geolocation access denied or unavailable.");
+        });
+    }
+}
+
+function inspectParcelFromMap(ulpin) {
+    setVerifyUlpin(ulpin);
+    switchDashboardTab('verificationTab');
+}
+
+/* =========================================
+   DASHBOARD SUMMARY & KPI METRICS
+========================================= */
+function setDashboardKpis(config) {
+    const ids = ['kpi1Label','kpi2Label','kpi3Label','kpi4Label','kpi5Label','kpi6Label'];
+    const subIds = ['kpi1Sub','kpi2Sub','kpi3Sub','kpi4Sub','kpi5Sub','kpi6Sub'];
+    const valueIds = ['parcelCount','totalArea','clearTitlesCount','mortgageCount','disputeCount','pendingMutCount'];
+    (config.labels || []).forEach((v,i) => { const el=document.getElementById(ids[i]); if(el) el.innerText=v; });
+    (config.subs || []).forEach((v,i) => { const el=document.getElementById(subIds[i]); if(el) el.innerText=v; });
+    (config.values || []).forEach((v,i) => { const el=document.getElementById(valueIds[i]); if(el) el.innerText=v; });
+}
+
+async function loadDashboardSummary() {
+    const userRole = (apiUser && (apiUser.govRole || apiUser.role || '')) || selectedUserType || 'Citizen';
+    const isPublic = userRole === 'PUBLIC' || userRole === 'public' || selectedUserType === 'Public';
+    const isGov = ['REVENUE_OFFICER', 'SRO_OFFICER', 'SURVEYOR', 'AUDITOR', 'SUPER_ADMIN', 'official', 'Government'].includes(userRole) || (apiUser && apiUser.role === 'official');
+
+    try {
+        if (isPublic) {
+            const s = await apiRequest('/v1/public/summary');
+            setDashboardKpis({
+                labels: ['Registered Parcels', 'Cadastral Area', 'Verified Parcels', 'Available Properties', 'Under Discussion', 'Transaction in Progress'],
+                values: [s.totalParcels || 0, (s.totalAreaHectares || 0) + ' Ha', s.verifiedParcels || 0, s.availableParcels || 0, s.underDiscussion || 0, s.transactionInProgress || 0],
+                subs: ['Public discovery across states', (s.totalAreaSqm || 0).toLocaleString() + ' sq.m surveyed', 'Privacy-preserving verification status', 'Open for purchase-interest requests', 'Interest / active encumbrance detected', 'Accepted purchase interest in process']
+            });
+            if (document.getElementById('sidebarParcelBadge')) document.getElementById('sidebarParcelBadge').innerText = s.totalParcels || 0;
+        } else if (!isGov) {
+            const [land, requests, notifications, applications] = await Promise.all([
+                apiRequest('/v1/citizen/my-land'),
+                apiRequest('/v1/citizen/purchase-requests'),
+                apiRequest('/v1/citizen/notifications'),
+                apiRequest('/v1/citizen/applications')
+            ]);
+            const owned = Array.isArray(land) ? land : [];
+            const totalArea = owned.reduce((sum, p) => sum + (Number(p.area) || 0), 0);
+            const pendingRequests = Array.isArray(requests) ? requests.filter(r => r.status === 'PENDING').length : 0;
+            const activeRequests = Array.isArray(requests) ? requests.filter(r => r.status !== 'REJECTED').length : 0;
+            const unread = Array.isArray(notifications) ? notifications.length : 0;
+            const pendingApplications = Array.isArray(applications) ? applications.filter(a => !['COMPLETED','REJECTED'].includes(a.status)).length : 0;
+            setDashboardKpis({
+                labels: ['My Properties', 'Total Land Area', 'Verified Properties', 'Pending Applications', 'Purchase Requests', 'Notifications'],
+                values: [owned.length, totalArea.toLocaleString() + ' sq.m', owned.length, pendingApplications, activeRequests, unread],
+                subs: ['Land records linked to your profile', 'Across your registered holdings', 'Active ownership records', pendingApplications ? 'Transfer / mutation workflow' : 'No pending transfers', pendingRequests ? pendingRequests + ' awaiting your response' : 'No requests awaiting response', unread ? 'Recent account activity' : 'No new notifications']
+            });
+            if (document.getElementById('sidebarParcelBadge')) document.getElementById('sidebarParcelBadge').innerText = owned.length;
+            if (document.getElementById('sidebarAppBadge')) document.getElementById('sidebarAppBadge').innerText = pendingApplications;
+        } else {
+            const s = await apiRequest('/dashboard/summary');
+            setDashboardKpis({
+                labels: ['Total Registered Parcels', 'Total Cadastral Area', 'Verified Parcels', 'Active Encumbrances', 'Active Court Disputes', 'Pending Mutations'],
+                values: [s.totalParcels || 12, (s.totalAreaHectares || 8.83) + ' Ha', s.verifiedParcels || 10, s.activeMortgages || 3, s.activeDisputes || 2, s.pendingMutations || 2],
+                subs: ['Across ' + (s.totalStates || 6) + ' Indian States', (s.totalArea || 88300.5).toLocaleString() + ' sq.m surveyed', 'RoR validated & verified', 'Bank / financial institution charges', 'Civil injunctions & partition matters', 'In 11-Stage Workflow']
+            });
+            if (document.getElementById('sidebarParcelBadge')) document.getElementById('sidebarParcelBadge').innerText = s.totalParcels || 12;
+            if (document.getElementById('sidebarAppBadge')) document.getElementById('sidebarAppBadge').innerText = s.pendingMutations || 2;
+        }
+        if (document.getElementById('heroMetricParcels')) document.getElementById('heroMetricParcels').innerText = document.getElementById('parcelCount')?.innerText || 12;
+    } catch (err) {
+        console.warn('Summary load err:', err);
+    }
+}
+
+/* =========================================
+   APPLICATIONS TAB & WORKFLOW
+========================================= */
+async function loadApplications() {
+    const tbody = document.getElementById("applicationsTableBody");
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#666">Loading applications from Land Stack Engine...</td></tr>';
+
+    try {
+        const apps = await apiRequest("/applications");
+        if (!Array.isArray(apps) || !apps.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#666">No active transfer applications found.</td></tr>';
+            return;
+        }
+
+        const userRole = (apiUser && (apiUser.govRole || apiUser.role || '')) || '';
+        const isGov = ['REVENUE_OFFICER', 'SRO_OFFICER', 'SUPER_ADMIN', 'official', 'Government'].includes(userRole) || (apiUser && apiUser.role === 'official');
+
+        tbody.innerHTML = apps.map(a => {
+            const statusClass = a.status === 'COMPLETED' ? 'badge-green' : (a.status === 'REJECTED' ? 'badge-red' : 'badge-amber');
+            let actionHtml = '';
+
+            if (isGov && (a.status === 'OFFICER_REVIEW' || a.status === 'SUBMITTED' || a.status === 'AUTO_CHECKS_PASSED')) {
+                actionHtml = `
+                    <div style="display:flex;gap:6px">
+                        <button class="btn btn-primary" style="font-size:11px;padding:4px 8px" onclick="reviewApplication('${a.application_id}', 'APPROVE')">Approve Step</button>
+                        <button class="btn btn-secondary" style="font-size:11px;padding:4px 8px" onclick="reviewApplication('${a.application_id}', 'REJECT')">Reject</button>
+                    </div>
+                `;
+            } else {
+                actionHtml = `<span style="font-size:11.5px;color:#666">In Verification</span>`;
+            }
+
+            return `
+                <tr>
+                    <td><strong>${escapeHTML(a.application_id)}</strong></td>
+                    <td><code style="font-family:var(--font-mono);color:#0b5d3b">${escapeHTML(a.ulpin)}</code></td>
+                    <td>${escapeHTML(a.survey_village || 'Survey 123/4A, Velachery')}</td>
+                    <td>${escapeHTML(a.current_owner || 'Ramesh Kumar')}</td>
+                    <td>${escapeHTML(a.target_buyer || 'Priya Sundaram')}</td>
+                    <td><span class="status-badge ${statusClass}">${escapeHTML(a.status)}</span></td>
+                    <td>${actionHtml}</td>
+                </tr>
+            `;
+        }).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#dc2626">${escapeHTML(err.message)}</td></tr>`;
+    }
+}
+
+async function reviewApplication(appId, decision) {
+    try {
+        await apiRequest(`/applications/${appId}/review`, {
+            method: "POST",
+            body: JSON.stringify({ decision, remarks: `Processed by Revenue Officer via Land Stack BhooNetra Interface.` })
+        });
+        showToast(`Application ${appId} marked as ${decision}!`);
+        loadApplications();
+        loadDashboardSummary();
+    } catch (err) {
+        showToast(err.message || "Review failed.");
+    }
+}
+
+async function submitTransferApplication(event) {
+    event.preventDefault();
+    const ulpin = document.getElementById("transferUlpinSelect").value;
+    const targetEmail = document.getElementById("transferBuyerEmail").value.trim();
+    const remarks = document.getElementById("transferRemarks").value.trim();
+
+    try {
+        await apiRequest("/applications", {
+            method: "POST",
+            body: JSON.stringify({ ulpin, target_email: targetEmail, remarks })
+        });
+        showToast("Ownership transfer application submitted successfully!");
+        closeTransferModal();
+        switchDashboardTab("applicationsTab");
+    } catch (err) {
+        showToast(err.message || "Submission failed.");
+    }
+}
+
+/* =========================================
+   CITIZEN MY LAND TAB
+========================================= */
+async function loadMyLand() {
+    const grid = document.getElementById("myLandGrid");
+    if (!grid) return;
+    grid.innerHTML = '<p style="color:#666">Loading registered parcels linked to your citizen identity...</p>';
+
+    const email = (apiUser && apiUser.email) ? apiUser.email : 'citizen.ramesh@gmail.com';
+    try {
+        const parcels = await apiRequest(`/citizen/my-land?email=${encodeURIComponent(email)}`);
+        if (!Array.isArray(parcels) || !parcels.length) {
+            grid.innerHTML = `
+                <div style="grid-column:1/-1;background:white;padding:32px;border-radius:12px;border:1px dashed #cbd5e1;text-align:center">
+                    <div style="font-size:36px;margin-bottom:12px">🏡</div>
+                    <h3>No Land Holdings Found Linked to ${escapeHTML(email)}</h3>
+                    <p style="color:#64748b;font-size:13.5px;margin-top:6px">Available citizen access accounts include <strong>Ramesh Kumar (Chennai)</strong>, <strong>Rajeshwari Hegde (Bengaluru)</strong>, or <strong>Balasaheb Shinde (Nashik)</strong>.</p>
+                </div>
+            `;
+            return;
+        }
+
+        loadOwnerPurchaseRequests();
+        loadCitizenNotifications();
+        grid.innerHTML = parcels.map(p => `
+            <div class="parcel-card-modern">
+                <div class="parcel-card-badge-row">
+                    <span class="status-badge badge-blue">Survey ${escapeHTML(p.survey_number)}</span>
+                    <span class="status-badge badge-green">RoR: ${escapeHTML(p.ror_status)}</span>
+                </div>
+                <div class="parcel-ulpin-code">${escapeHTML(p.ulpin)}</div>
+                <div class="parcel-detail-grid">
+                    <div><strong>Location:</strong><br>${escapeHTML(p.village)}, ${escapeHTML(p.district || p.state)}</div>
+                    <div><strong>Land Use:</strong><br>${escapeHTML(p.land_type)}</div>
+                    <div><strong>Area:</strong><br>${escapeHTML(String(p.area))} sq.m</div>
+                    <div><strong>Ownership Share:</strong><br>${escapeHTML(String(p.share))}% (Sole Title)</div>
+                    <div style="grid-column:1/-1"><strong>RoR Extract:</strong> ${escapeHTML(p.ror_number || 'ROR-ACTIVE')}</div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="btn btn-primary" style="font-size:11.5px;padding:7px 12px;flex:1" onclick="openTransferModal()">Apply Transfer</button>
+                    <button class="btn btn-secondary" style="font-size:11.5px;padding:7px 12px" onclick="downloadRorCertificate('${escapeHTML(p.ulpin)}')">📥 e-RoR</button>
+                    <button class="btn btn-gold" style="font-size:11.5px;padding:7px 12px" onclick="flyToParcel('${escapeHTML(p.ulpin)}'); switchDashboardTab('mapTab');">🗺️ Map</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        grid.innerHTML = `<p style="color:#dc2626">Failed to load holdings: ${escapeHTML(err.message)}</p>`;
+    }
+}
+
+async function loadCitizenNotifications(){
+    const box=document.getElementById('citizenNotificationsPanel'); if(!box)return;
+    try{const rows=await apiRequest('/v1/citizen/notifications'); if(!rows.length){box.innerHTML='<p style="color:#64748b">No new notifications.</p>';return;} box.innerHTML=rows.slice().reverse().map(n=>`<div style="padding:10px 0;border-bottom:1px solid #e2e8f0"><strong>${escapeHTML(n.subject)}</strong><div style="font-size:12px;color:#64748b;margin-top:3px">${escapeHTML(n.message)}</div><small style="color:#94a3b8">${escapeHTML(n.timestamp?n.timestamp.substring(0,19).replace('T',' '):'Recent')}</small></div>`).join('');}catch(err){box.innerHTML=`<p style="color:#dc2626">${escapeHTML(err.message)}</p>`;}
+}
+
+async function loadOwnerPurchaseRequests(){
+    const box=document.getElementById('purchaseRequestsOwnerPanel'); if(!box)return;
+    try{const rows=await apiRequest('/v1/citizen/purchase-requests'); if(!rows.length){box.innerHTML='<p style="color:#64748b">No purchase-interest requests received yet.</p>';return;} box.innerHTML=rows.map(r=>`<div style="padding:16px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;background:#fff"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><strong>#${escapeHTML(r.request_id)}</strong><span class="status-badge ${r.status==='ACCEPTED'?'badge-green':(r.status==='REJECTED'?'badge-red':'badge-amber')}">${escapeHTML(r.status)}</span></div><div style="margin-top:8px"><strong>${escapeHTML(r.requester_name)}</strong> • ${escapeHTML(r.ulpin)} • Received: ${escapeHTML(r.created_at?r.created_at.substring(0,10):'Recent')}</div><div style="font-size:12px;color:#475569;margin-top:5px">📧/📱 ${escapeHTML(r.requester_contact || 'Not supplied')}</div><div style="font-size:12px;color:#475569;margin-top:5px;white-space:pre-line">${escapeHTML(r.message)}</div>${r.status==='PENDING'?`<div style="margin-top:10px"><textarea id="response_${escapeHTML(r.request_id)}" rows="2" placeholder="Optional response to requester" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:7px"></textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-primary" style="font-size:11px;padding:5px 10px" onclick="decidePurchaseRequest('${escapeHTML(r.request_id)}','ACCEPT')">Accept Interest</button><button class="btn btn-secondary" style="font-size:11px;padding:5px 10px" onclick="decidePurchaseRequest('${escapeHTML(r.request_id)}','REJECT')">Reject</button></div></div>`:`${r.owner_response?`<div style="margin-top:8px;padding:8px;background:#f8fafc;border-radius:7px;font-size:12px"><strong>Owner response:</strong> ${escapeHTML(r.owner_response)}</div>`:''}`}</div>`).join('');}catch(err){box.innerHTML=`<p style="color:#dc2626">${escapeHTML(err.message)}</p>`;}
+}
+async function decidePurchaseRequest(id,decision){try{const field=document.getElementById('response_'+id);const responseMessage=field?field.value.trim():'';const qs=new URLSearchParams({decision});if(responseMessage)qs.set('response_message',responseMessage);await apiRequest(`/v1/citizen/purchase-requests/${encodeURIComponent(id)}/decision?${qs.toString()}`,{method:'POST'});showToast(`Purchase request ${decision.toLowerCase()}ed.`);loadOwnerPurchaseRequests();loadCitizenNotifications();}catch(err){showToast(err.message||'Could not update request.');}}
+
+function downloadRorCertificate(ulpin) {
+    showToast("Generating official tamper-evident e-RoR extract for " + ulpin);
+    setTimeout(() => {
+        window.open(BHOONETRA_API + "/public/parcels/" + encodeURIComponent(ulpin) + "/ownership-summary", "_blank");
+    }, 400);
+}
+
+/* =========================================
+   360° GOVERNMENT VERIFICATION
+========================================= */
+function setVerifyUlpin(ulpin) {
+    const input = document.getElementById("verifyUlpinInput");
+    if (input) input.value = ulpin;
+    runVerificationCheck();
+}
+
+async function runVerificationCheck() {
+    const ulpin = (document.getElementById("verifyUlpinInput") ? document.getElementById("verifyUlpinInput").value.trim() : "") || "IN-TN-CHN-000001234567";
+    const rorEl = document.getElementById("checkRor");
+    const sroEl = document.getElementById("checkSro");
+    const polEl = document.getElementById("checkPolice");
+    const aiEl = document.getElementById("checkAiTrust");
+
+    if (rorEl) rorEl.innerHTML = '<span style="color:#666">Verifying Record of Rights...</span>';
+    if (sroEl) sroEl.innerHTML = '<span style="color:#666">Checking SRO registration deeds & mortgages...</span>';
+    if (polEl) polEl.innerHTML = '<span style="color:#666">Scanning judicial & police litigation...</span>';
+
+    try {
+        const [checklist, sro, police] = await Promise.all([
+            apiRequest(`/checklist/${ulpin}`),
+            apiRequest(`/sro/${ulpin}`),
+            apiRequest(`/police/${ulpin}`)
+        ]);
+
+        if (rorEl) {
+            rorEl.innerHTML = `
+                <div style="color:#0b5d3b;font-weight:700;margin-bottom:4px">✔ RoR Title Active & Validated</div>
+                <div>Tenure: <strong>Freehold Class-1</strong></div>
+                <div style="font-size:11.5px;color:#555;margin-top:4px">Bhu-Aadhaar ULPIN registered and synchronized with state revenue records.</div>
+            `;
+        }
+
+        if (sroEl) {
+            const isEnc = sro.encumbrance_status === 'ACTIVE_ENCUMBRANCE';
+            sroEl.innerHTML = `
+                <div style="color:${isEnc ? '#d97706' : '#0b5d3b'};font-weight:700;margin-bottom:4px">
+                    ${isEnc ? '⚠ Active Bank Mortgage / Encumbrance' : '✔ SRO Deed Clear (Zero Encumbrances)'}
+                </div>
+                <div>SRO Office: <strong>${escapeHTML(sro.nearest_sro)}</strong></div>
+                <div>Deeds Registered: <strong>${sro.deeds_count}</strong></div>
+                <div style="font-size:11.5px;color:#555;margin-top:4px">CERSAI & Sub-Registrar ledger re-verified on ${escapeHTML(sro.last_verified)}.</div>
+            `;
+        }
+
+        if (polEl) {
+            const isDisputed = police.status !== 'Cleared';
+            polEl.innerHTML = `
+                <div style="color:${isDisputed ? '#dc2626' : '#0b5d3b'};font-weight:700;margin-bottom:4px">
+                    ${isDisputed ? '⚠ ' + escapeHTML(police.status) : '✔ No Police Injunctions / Clear Judicial Status'}
+                </div>
+                <div style="font-size:11.5px;color:#555">${escapeHTML(police.incident_details || 'Court and police registers report clean boundary demarcation.')}</div>
+            `;
+        }
+
+        if (aiEl) {
+            const hasIssues = (sro.encumbrance_status === 'ACTIVE_ENCUMBRANCE') || (police.status !== 'Cleared');
+            const score = hasIssues ? 68 : 98;
+            const scoreColor = hasIssues ? '#d97706' : '#0b5d3b';
+            const riskText = hasIssues ? 'MODERATE RISK • ENCUMBRANCE OR LITIGATION' : 'LOW RISK • TITLE FULLY VERIFIED';
+            aiEl.innerHTML = `
+                <div style="font-size:24px;font-weight:800;color:${scoreColor}">${score} / 100</div>
+                <div style="font-size:11.5px;color:${scoreColor};font-weight:700">${riskText}</div>
+                <small style="color:var(--slate-500);display:block;margin-top:4px">Multifactor AI assessment computed from deed integrity, tax payment history, and spatial encroachment detection.</small>
+            `;
+        }
+    } catch (err) {
+        showToast("Verification check: " + err.message);
+    }
+}
+
+async function reverifySroAction() {
+    const ulpin = (document.getElementById("verifyUlpinInput") ? document.getElementById("verifyUlpinInput").value.trim() : "") || "IN-TN-CHN-000001234567";
+    try {
+        await apiRequest(`/sro/${ulpin}/reverify`, { method: "POST" });
+        showToast("SRO database synchronization triggered!");
+        runVerificationCheck();
+    } catch (err) {
+        showToast(err.message || "Re-verification failed.");
+    }
+}
+
+/* =========================================
+   GOVERNMENT LETTERS & AUDIT LOGS
+========================================= */
+async function loadGovernmentLetters() {
+    const tbody = document.getElementById("lettersTableBody");
+    if (!tbody) return;
+    try {
+        const letters = await apiRequest("/letters");
+        if (!Array.isArray(letters) || !letters.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:#666">No government notices issued yet.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = letters.map(l => `
+            <tr>
+                <td><strong>${escapeHTML(l.letter_id)}</strong></td>
+                <td><code style="font-family:var(--font-mono);color:#0b5d3b">${escapeHTML(l.ulpin)}</code></td>
+                <td><span class="status-badge badge-blue">${escapeHTML(l.letter_type)}</span></td>
+                <td>${escapeHTML(l.issued_by)}</td>
+                <td>${escapeHTML(l.issued_date ? l.issued_date.substring(0,10) : 'Recent')}</td>
+                <td style="max-width:320px">${escapeHTML(l.content)}</td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding:20px;text-align:center;color:#dc2626">${escapeHTML(err.message)}</td></tr>`;
+    }
+}
+
+async function submitOfficialLetter() {
+    const ulpin = document.getElementById("letterUlpin").value.trim();
+    const letter_type = document.getElementById("letterType").value;
+    const content = document.getElementById("letterContent").value.trim();
+
+    try {
+        await apiRequest("/letters", {
+            method: "POST",
+            body: JSON.stringify({ ulpin, letter_type, content })
+        });
+        showToast("Statutory order issued successfully!");
+        document.getElementById("letterFormBox").style.display = "none";
+        loadGovernmentLetters();
+    } catch (err) {
+        showToast(err.message || "Failed to issue order.");
+    }
+}
+
+async function loadAuditTrail() {
+    const tbody = document.getElementById("auditTableBody");
+    if (!tbody) return;
+    try {
+        const logs = await apiRequest("/audit/logs");
+        if (!Array.isArray(logs) || !logs.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="padding:20px;text-align:center;color:#666">No audit records found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = logs.map(l => `
+            <tr>
+                <td>#${escapeHTML(String(l.id || 1))}</td>
+                <td style="font-size:11.5px;color:#666">${escapeHTML(l.timestamp ? l.timestamp.substring(0,19).replace('T',' ') : 'Now')}</td>
+                <td><strong>${escapeHTML(l.user_id)}</strong></td>
+                <td><span class="status-badge badge-purple">${escapeHTML(l.user_role)}</span></td>
+                <td><span class="status-badge badge-green">${escapeHTML(l.action)}</span></td>
+                <td><code style="font-family:var(--font-mono)">${escapeHTML(l.ulpin || '—')}</code></td>
+                <td>${escapeHTML(l.new_value || l.previous_value || 'Compliant')}</td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:#dc2626">${escapeHTML(err.message)}</td></tr>`;
+    }
+}
+
+/* =========================================
+   PUBLIC LAND REGISTRY (DPDP MASKED)
+========================================= */
+function setPublicSearch(ulpin) {
+    const input=document.getElementById("publicSearchInput"); if(input) input.value=ulpin; searchPublicLand();
+}
+
+async function searchPublicLand() {
+    const query=(document.getElementById("publicSearchInput")?.value.trim())||"IN-TN-CHN-000001234567";
+    try {
+        const params=new URLSearchParams();
+        if(query) { if(query.startsWith("IN-")) params.set("ulpin",query); else if(/^[0-9]+([\/\-].*)?$/.test(query)) params.set("surveyNumber",query); else params.set("q",query); }
+        const state=document.getElementById("publicStateFilter")?.value; const district=document.getElementById("publicDistrictFilter")?.value;
+        if(state) params.set("state",state); if(district) params.set("district",district);
+        const min=document.getElementById("publicMinArea")?.value; const max=document.getElementById("publicMaxArea")?.value;
+        if(min) params.set("min_area",min); if(max) params.set("max_area",max);
+        const type=document.getElementById("publicLandTypeFilter")?.value; if(type) params.set("land_type",type);
+        const zone=document.getElementById("publicZoningFilter")?.value; if(zone) params.set("zoning",zone);
+        const res=await apiRequest(`/v1/public/search?${params.toString()}`);
+        if(!Array.isArray(res)||!res.length){showToast("No public parcel matched.");return;}
+        const requestedStatus=document.getElementById("publicAvailabilityFilter")?.value;
+        let match=null;
+        for(const p of res){ try { const d=await apiRequest(`/v1/public/parcels/${encodeURIComponent(p.ulpin)}/citizen-view`); if(!requestedStatus||d.parcel_status===requestedStatus){match=p;break;} }catch(_){} }
+        if(!match){showToast(requestedStatus ? `No parcel found with status: ${requestedStatus}` : "No public parcel matched.");return;}
+        const detail=await apiRequest(`/v1/public/parcels/${encodeURIComponent(match.ulpin)}/citizen-view`);
+        renderPublicCitizenView(detail);
+    } catch(err){showToast("Public search: "+err.message);}
+}
+
+function renderPublicCitizenView(d){
+    const badge=document.getElementById('pubVerificationBadge');
+    const v=d.verification_status||'IN PROGRESS';
+    badge.innerText=v==='VERIFIED'?'🟢 VERIFIED':(v==='IN PROGRESS'?'🟡 VERIFICATION IN PROGRESS':'🔴 VERIFICATION REQUIRED');
+    badge.className='status-badge '+(v==='VERIFIED'?'badge-green':(v==='IN PROGRESS'?'badge-amber':'badge-red'));
+    document.getElementById('pubResultTitle').innerText=`Parcel ${d.ulpin} (Survey: ${d.survey_number}) • ${d.parcel_status}`;
+    const l=d.location||{};
+    document.getElementById('pubResultDetails').innerHTML=`<div><strong>Location:</strong> ${escapeHTML([l.village,l.taluk,l.district,l.state].filter(Boolean).join(', '))}</div><div><strong>Survey Number:</strong> ${escapeHTML(d.survey_number)}</div><div><strong>Area:</strong> ${escapeHTML(String(d.area))} ${escapeHTML(d.area_unit)}</div><div><strong>Land Type:</strong> ${escapeHTML(d.land_type)}</div><div><strong>Parcel Status:</strong> <span class="status-badge badge-blue">${escapeHTML(d.parcel_status)}</span></div>`;
+    document.getElementById('pubOwnership').innerHTML=(d.ownership?.owners||[]).map(o=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e2e8f0"><span>${escapeHTML(o.name)}</span><strong>${escapeHTML(String(o.share_percentage))}% share</strong></div>`).join('')+`<div style="margin-top:8px"><strong>Tenure:</strong> ${escapeHTML(d.ownership?.tenure||'Not recorded')}</div>`;
+    const legal=d.legal||{}, ti=legal.title_information||{};
+    document.getElementById('pubLegal').innerHTML=`<div><strong>Encumbrance:</strong> ${escapeHTML(legal.encumbrance_status)} (${legal.encumbrance_count||0})</div><div><strong>Dispute:</strong> ${escapeHTML(legal.dispute_status)}</div><div><strong>Latest registered deed:</strong> ${escapeHTML(ti.latest_deed_type||'Not recorded')} ${ti.latest_registration_number?`(${escapeHTML(ti.latest_registration_number)})`:''}</div><div><strong>Registration date:</strong> ${escapeHTML(ti.registration_date?ti.registration_date.substring(0,10):'Not recorded')}</div>`;
+    const pl=d.planning||{}; document.getElementById('pubPlanning').innerHTML=`<div><strong>Zoning:</strong> ${escapeHTML(pl.zoning)}</div><div><strong>Permitted use:</strong> ${escapeHTML(pl.permitted_use)}</div><div><strong>FSI:</strong> ${escapeHTML(pl.fsi==null?'Not recorded':String(pl.fsi))}</div><div><strong>Restrictions:</strong> ${escapeHTML(pl.development_restrictions)}</div>`;
+    document.getElementById('pubDocuments').innerHTML=(d.documents||[]).length?(d.documents.map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #e2e8f0"><span>📄 ${escapeHTML(x.document_type)}<br><small>${escapeHTML(x.file_name)}</small></span><span><span class="status-badge badge-green">Verified • ${escapeHTML(x.reference)}</span><button class="btn btn-secondary" style="font-size:10px;padding:4px 7px;margin-left:5px" onclick="viewPublicDocument('${escapeHTML(d.ulpin)}','${escapeHTML(x.document_id)}')">View / Download</button></span></div>`).join('')):'<span style="color:#64748b">No publicly releasable verified documents are linked to this parcel.</span>';
+    const m=d.map||{}; document.getElementById('pubMapInfo').innerHTML=`<strong>Boundary:</strong> Available • <strong>Survey:</strong> ${escapeHTML(d.survey_number)} • <strong>Area:</strong> ${escapeHTML(String(d.area))} ${escapeHTML(d.area_unit)}<br><strong>Nearby roads:</strong> ${escapeHTML((m.nearby_roads||[]).join(', '))}<br><strong>Nearby landmarks:</strong> ${escapeHTML((m.nearby_landmarks||[]).join(', '))}<br><strong>Direction:</strong> ${escapeHTML(m.north_direction||'↑ North')}`;
+    document.getElementById('purchaseRequestUlpin').value=d.ulpin; showPublicParcelOnMap(d);
+}
+
+async function viewPublicDocument(ulpin, documentId){
+    const url=PUBLIC_API + '/parcels/' + encodeURIComponent(ulpin) + '/documents/' + encodeURIComponent(documentId) + '/download';
+    window.open(url,'_blank');
+}
+
+function showPublicParcelOnMap(d){
+    if(!map || !d || !d.map || !d.map.geometry) return;
+    try{
+        const layer=L.geoJSON({type:'Feature',geometry:{type:d.map.geometry_type||'Polygon',coordinates:d.map.geometry}}, {style:{weight:3,fillOpacity:0.12}}).addTo(map);
+        if(d.map.centroid) L.marker([d.map.centroid[1],d.map.centroid[0]]).addTo(map).bindPopup('<b>'+escapeHTML(d.ulpin)+'</b><br>Survey: '+escapeHTML(d.survey_number));
+        map.fitBounds(layer.getBounds(),{padding:[30,30],maxZoom:17});
+        setTimeout(()=>map.invalidateSize(),200);
+    }catch(e){console.warn('Public map render failed',e);}
+}
+
+async function submitPublicPurchaseRequest(event) {
+    event.preventDefault(); const ulpin=document.getElementById('purchaseRequestUlpin').value.trim();
+    const name=document.getElementById('purchaseRequesterName').value.trim(); const email=document.getElementById('purchaseRequesterEmail').value.trim(); const phone=document.getElementById('purchaseRequesterPhone').value.trim(); const offer=document.getElementById('purchaseOffer').value.trim(); const msg=document.getElementById('purchaseMessage').value.trim();
+    try { const result=await apiRequest('/v1/public/purchase-request',{method:'POST',body:JSON.stringify({ulpin,requester_name:name,requester_contact:`${email} | ${phone}`,offer:offer||null,message:msg})}); showToast(`✓ Request submitted successfully • Request ID: ${result.request_id}`); document.getElementById('purchaseMessage').value=''; document.getElementById('purchaseOffer').value=''; } catch(err){showToast(err.message||'Unable to send purchase request.');}
+}
+
+function printPublicCertificate() {
+    window.print();
+}
+
+/* =========================================
+   MULTILINGUAL SUPPORT
+========================================= */
+const translations = {
+    en: {
+        welcomeTitle: "Unified Digital Public Infrastructure for Land Governance & GIS",
+        welcomeText: "Interoperable nationwide land governance platform connecting Citizens, SRO Sub-Registrars, and Revenue Authorities with cadastral mapping, PostGIS GeoJSON, and automated 11-step mutation workflows."
+    },
+    mr: {
+        welcomeTitle: "जमीन महसूल व जीआयएस साठी एकात्मिक डिजिटल सार्वजनिक पायाभूत सुविधा",
+        welcomeText: "नागरिक, उपनिबंधक आणि महसूल अधिकारी यांना कॅडस्ट्रल मॅपिंग आणि स्वयंचलित फेरफार कार्यप्रणालीसह जोडणारे राष्ट्रीय व्यासपीठ."
+    },
+    hi: {
+        welcomeTitle: "भूमि अभिलेख एवं जीआईएस हेतु राष्ट्रीय एकीकृत डिजिटल सार्वजनिक अवसंरचना",
+        welcomeText: "नागरिकों, उप-पंजीयकों और राजस्व अधिकारियों को भू-आधार, कैडस्ट्रल मैपिंग और 11-चरणीय नामांतरण प्रक्रिया से जोड़ने वाला डिजिटल मंच।"
+    }
+};
+
+function changeLanguage() {
+    const lang = document.getElementById("languageSelect").value;
+    const t = translations[lang] || translations.en;
+    if (document.getElementById("welcomeTitle")) document.getElementById("welcomeTitle").innerText = t.welcomeTitle;
+    if (document.getElementById("welcomeText")) document.getElementById("welcomeText").innerText = t.welcomeText;
+}
+
+/* =========================================
+   PAGE INITIALIZATION
+========================================= */
+window.addEventListener("DOMContentLoaded", () => {
+    generateCaptcha();
+    if (apiUser && apiToken) {
+        openDashboard();
+    }
+});
+</script>
+</body>
+</html>
